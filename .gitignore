@@ -1,0 +1,9 @@
+.env
+__pycache__/
+*.pyc
+data/*.db
+data/agent_memory.json
+data_quarantine/*.json
+exports/*
+.DS_Store
+
