@@ -1,13 +1,16 @@
 /**
  * MINH AN COMPANY - B2B AI AGENT SYSTEM
- * Client-side Controller & Interactive Pipeline
+ * Multi-Page SaaS Router & Business Controller
+ * Author: Lê Yến Như
  */
 
+let currentUser = null;
 let allOpportunities = [];
-let activeOpportunity = null;
-let statusPieChartInstance = null;
+let masterCatalog = {};
+let saasChartInstance = null;
+let currentProcessingOpp = null;
 
-const TEST_CASES_DATA = {
+const TEST_CASES_SAMPLES = {
   1: `Chào Minh An Company,
 Tôi là Trần Văn Hùng, Trưởng phòng CNTT Công ty Cổ phần Công nghệ DigiTech (Email: hung.tran@digitech.vn, SĐT: 0912345678).
 Công ty chúng tôi đang cần trang bị thiết bị cho nhân viên mới:
@@ -44,182 +47,323 @@ Người liên hệ: Vũ Đức Thắng - Quản lý Vận hành (Email: thang.v
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-  initApp();
-  loadTestCase(1);
+  initSystem();
 });
 
-async function initApp() {
-  try {
-    const res = await fetch('/api/opportunities');
-    const data = await res.json();
-    allOpportunities = data.opportunities || [];
-    renderDashboard(data.summary, allOpportunities);
-    
-    if (allOpportunities.length > 0) {
-      renderOpportunityDetail(allOpportunities[0]);
+async function initSystem() {
+  // Check stored auth session
+  const storedUser = localStorage.getItem('minhan_user');
+  if (storedUser) {
+    try {
+      currentUser = JSON.parse(storedUser);
+      applyUserInfoToUi(currentUser);
+    } catch (e) {
+      localStorage.removeItem('minhan_user');
     }
+  }
 
+  // Handle URL hash routing
+  const hash = window.location.hash.replace('#', '');
+  if (hash === 'login') {
+    navigateTo('login');
+  } else if (hash.startsWith('app') && currentUser) {
+    navigateTo('app');
+    const subPage = hash.split('/')[1] || 'page-dashboard';
+    openSaasPage(subPage);
+  } else {
+    navigateTo('landing');
+  }
+
+  // Preload initial backend data
+  await loadBackendData();
+}
+
+async function loadBackendData() {
+  try {
+    const [oppsRes, catRes] = await Promise.all([
+      fetch('/api/opportunities'),
+      fetch('/api/catalog')
+    ]);
+
+    const oppsData = await oppsRes.json();
+    const catData = await catRes.json();
+
+    allOpportunities = oppsData.opportunities || [];
+    masterCatalog = catData.catalog || {};
+
+    renderDashboardData(oppsData.summary, allOpportunities);
+    renderCatalogTable(masterCatalog);
+    renderReportsTable(oppsData.summary, allOpportunities);
+    renderApprovalInbox(allOpportunities);
     loadAuditLogs();
-    renderStaticPipelineSteps();
   } catch (err) {
-    console.error('Lỗi khởi tạo hệ thống:', err);
+    console.error('Lỗi tải dữ liệu ban đầu:', err);
   }
 }
 
-function startExperience() {
-  const mainNav = document.getElementById('mainNav');
-  if (mainNav) {
-    mainNav.scrollIntoView({ behavior: 'smooth' });
+// ==========================================
+// ROUTER & NAVIGATION CONTROLLER
+// ==========================================
+function navigateTo(targetView) {
+  const landingView = document.getElementById('publicLandingView');
+  const loginView = document.getElementById('publicLoginView');
+  const appView = document.getElementById('privateAppView');
+
+  landingView.style.display = 'none';
+  loginView.style.display = 'none';
+  appView.style.display = 'none';
+
+  if (targetView === 'login') {
+    loginView.style.display = 'flex';
+    window.location.hash = 'login';
+    window.scrollTo(0, 0);
+  } else if (targetView === 'app') {
+    if (!currentUser) {
+      alert('Vui lòng đăng nhập để truy cập hệ thống nội bộ!');
+      navigateTo('login');
+      return;
+    }
+    appView.style.display = 'block';
+    window.location.hash = 'app';
+  } else {
+    landingView.style.display = 'block';
+    window.location.hash = 'landing';
+    window.scrollTo(0, 0);
   }
 }
 
-function switchTab(tabId) {
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
+function scrollToFeatures() {
+  const featSec = document.getElementById('featuresSection');
+  if (featSec) {
+    featSec.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function openSaasPage(pageId) {
+  if (!currentUser) {
+    navigateTo('login');
+    return;
+  }
+
+  // Hide all pages
+  document.querySelectorAll('.saas-page').forEach(p => p.classList.remove('active'));
+
+  // Show target page
+  const target = document.getElementById(pageId);
+  if (target) {
+    target.classList.add('active');
+  }
+
+  // Update sidebar active link
+  document.querySelectorAll('.sidebar-menu .menu-link').forEach(link => {
+    link.classList.toggle('active', link.getAttribute('data-page') === pageId);
   });
 
-  document.querySelectorAll('.tab-content').forEach(content => {
-    content.style.display = content.id === tabId ? 'block' : 'none';
-  });
+  // Update breadcrumb
+  const breadcrumbMap = {
+    'page-dashboard': 'Tổng quan',
+    'page-ingestion': 'Tiếp nhận yêu cầu',
+    'page-parsing': 'Phân tích yêu cầu AI',
+    'page-opportunities': 'Quản lý cơ hội',
+    'page-validation': 'Thẩm định kho & đơn giá',
+    'page-pricing': 'Báo giá & Chiết khấu',
+    'page-approval': 'Hộp thư phê duyệt',
+    'page-reports': 'Báo cáo & Thống kê',
+    'page-audit': 'Nhật ký AI Agent',
+    'page-data': 'Quản lý dữ liệu',
+    'page-settings': 'Cài đặt & Phân quyền'
+  };
 
-  if (tabId === 'tab-audit') {
+  document.getElementById('breadcrumbCurrentPage').textContent = breadcrumbMap[pageId] || 'Hệ thống';
+  window.location.hash = `app/${pageId}`;
+  window.scrollTo(0, 0);
+
+  if (pageId === 'page-audit') {
     loadAuditLogs();
   }
 }
 
-function renderDashboard(summary, opps) {
+// ==========================================
+// AUTHENTICATION & LOGIN LOGIC
+// ==========================================
+async function handleLoginSubmit(e) {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+  const errorBox = document.getElementById('loginErrorAlert');
+
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+    if (data.status === 'success') {
+      currentUser = data.user;
+      localStorage.setItem('minhan_user', JSON.stringify(currentUser));
+      applyUserInfoToUi(currentUser);
+      errorBox.style.display = 'none';
+
+      navigateTo('app');
+      openSaasPage('page-dashboard');
+    } else {
+      errorBox.textContent = data.error || 'Thông tin đăng nhập không hợp lệ!';
+      errorBox.style.display = 'block';
+    }
+  } catch (err) {
+    errorBox.textContent = 'Lỗi kết nối máy chủ.';
+    errorBox.style.display = 'block';
+  }
+}
+
+function fillDemoAccount(email, pwd) {
+  document.getElementById('loginEmail').value = email;
+  document.getElementById('loginPassword').value = pwd;
+}
+
+function togglePasswordVisibility() {
+  const pwdInput = document.getElementById('loginPassword');
+  pwdInput.type = pwdInput.type === 'password' ? 'text' : 'password';
+}
+
+function handleLogout() {
+  if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?')) {
+    currentUser = null;
+    localStorage.removeItem('minhan_user');
+    navigateTo('landing');
+  }
+}
+
+function applyUserInfoToUi(user) {
+  if (!user) return;
+  const nameEl = document.getElementById('sidebarUserName');
+  const roleEl = document.getElementById('sidebarUserRole');
+  const avatarEl = document.getElementById('sidebarUserAvatar');
+
+  if (nameEl) nameEl.textContent = user.name || 'Lê Yến Như';
+  if (roleEl) roleEl.textContent = user.role || 'Quản trị viên';
+  if (avatarEl && user.avatar) avatarEl.src = user.avatar;
+}
+
+// ==========================================
+// PAGE 3: DASHBOARD CONTROLLER
+// ==========================================
+function renderDashboardData(summary, opps) {
   if (!summary) return;
 
-  // 1. Update KPI Counters & Values
-  document.getElementById('countEligible').textContent = summary.eligible.count;
-  document.getElementById('valEligible').textContent = formatCurrency(summary.eligible.total_value);
+  document.getElementById('dashCountEligible').textContent = summary.eligible.count;
+  document.getElementById('dashValEligible').textContent = formatCurrency(summary.eligible.total_value);
 
-  document.getElementById('countPending').textContent = summary.pending_approval.count;
-  document.getElementById('valPending').textContent = formatCurrency(summary.pending_approval.total_value);
+  document.getElementById('dashCountPending').textContent = summary.pending_approval.count;
+  document.getElementById('dashValPending').textContent = formatCurrency(summary.pending_approval.total_value);
 
-  document.getElementById('countMissing').textContent = summary.missing_info.count;
-  document.getElementById('countUnfulfilled').textContent = summary.unfulfilled.count;
+  document.getElementById('dashCountMissing').textContent = summary.missing_info.count;
+  document.getElementById('dashCountUnfulfilled').textContent = summary.unfulfilled.count;
 
-  document.getElementById('navBadgeTotal').textContent = opps.length;
-  document.getElementById('oppsSubtitle').textContent = `Tổng ${opps.length} cơ hội | Minh An Company`;
+  document.getElementById('sidebarOppCount').textContent = opps.length;
+  document.getElementById('sidebarPendingCount').textContent = summary.pending_approval.count;
 
-  // 2. Render Table Rows
-  const tbody = document.getElementById('oppsTableBody');
-  tbody.innerHTML = '';
-
-  opps.forEach(opp => {
-    const tr = document.createElement('tr');
-    const statusBadgeClass = getBadgeClass(opp.status);
-    const formattedVal = opp.pricing.total_after_discount > 0 ? formatCurrency(opp.pricing.total_after_discount) : 'Chưa xác định';
-
-    tr.innerHTML = `
-      <td><b>${opp.id}</b></td>
+  // Render recent table
+  const tbody = document.getElementById('dashTableBody');
+  tbody.innerHTML = opps.slice(0, 5).map(o => `
+    <tr>
+      <td><b>${o.id}</b></td>
       <td>
-        <div style="font-weight:700;">${opp.customer_name}</div>
-        <div style="font-size:11.5px; color:#64748b;">${opp.contact_person}</div>
+        <div style="font-weight:700;">${o.customer_name}</div>
+        <small style="color:#64748b;">${o.contact_person}</small>
       </td>
+      <td><span class="badge-tag ${getBadgeStyle(o.status)}">${o.status}</span></td>
+      <td style="font-weight:700;">${o.pricing.total_after_discount > 0 ? formatCurrency(o.pricing.total_after_discount) : 'Chưa xác định'}</td>
+      <td>${o.sales_rep ? o.sales_rep.name : 'N/A'}</td>
       <td>
-        <span class="status-badge ${statusBadgeClass}">${opp.status}</span>
+        <button class="btn-secondary-tool" onclick="inspectOpportunity('${o.id}')">Xem hồ sơ &rarr;</button>
       </td>
-      <td style="font-weight:700; color:#1e293b;">${formattedVal}</td>
-      <td>${opp.sales_rep ? opp.sales_rep.name : 'Chưa gán'}</td>
-      <td>
-        <button class="btn-table-action" onclick="viewOpportunityDetail('${opp.id}')">Xem Chi Tiết &rarr;</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
+    </tr>
+  `).join('');
 
-  // 3. Render Status Donut Chart
-  renderStatusPieChart(summary);
+  // Render Chart
+  renderSaasChart(summary);
+  renderAllOpportunitiesTable(opps);
 }
 
-function renderStatusPieChart(summary) {
-  const ctx = document.getElementById('statusPieChart');
+function renderSaasChart(summary) {
+  const ctx = document.getElementById('saasStatusChart');
   if (!ctx) return;
 
-  if (statusPieChartInstance) {
-    statusPieChartInstance.destroy();
+  if (saasChartInstance) {
+    saasChartInstance.destroy();
   }
 
-  const dataValues = [
-    summary.eligible.count,
-    summary.pending_approval.count,
-    summary.missing_info.count,
-    summary.unfulfilled.count
-  ];
-
-  statusPieChartInstance = new Chart(ctx, {
+  saasChartInstance = new Chart(ctx, {
     type: 'doughnut',
     data: {
       labels: ['Có thể tiếp tục', 'Chờ duyệt', 'Cần bổ sung', 'Chưa đáp ứng'],
       datasets: [{
-        data: dataValues,
+        data: [
+          summary.eligible.count,
+          summary.pending_approval.count,
+          summary.missing_info.count,
+          summary.unfulfilled.count
+        ],
         backgroundColor: ['#10b981', '#8b5cf6', '#f59e0b', '#ef4444'],
         borderWidth: 2,
-        borderColor: '#ffffff'
+        borderColor: '#fff'
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            boxWidth: 12,
-            font: { family: "'Plus Jakarta Sans', sans-serif", size: 11, weight: '600' }
-          }
-        }
+        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11, weight: '600' } } }
       },
       cutout: '65%'
     }
   });
 }
 
-function loadTestCase(tcNum, btnEl) {
-  document.querySelectorAll('.test-case-card-btn').forEach(b => b.classList.remove('active'));
-  if (btnEl) {
-    btnEl.classList.add('active');
-  } else {
-    const defaultBtn = document.querySelectorAll('.test-case-card-btn')[tcNum - 1];
-    if (defaultBtn) defaultBtn.classList.add('active');
-  }
+// ==========================================
+// PAGE 4 & 5: INGESTION & PARSING
+// ==========================================
+function loadTestCaseToForm(tcNum) {
+  const text = TEST_CASES_SAMPLES[tcNum];
+  document.getElementById('pageIngestTextarea').value = text || '';
+}
 
-  const inputEl = document.getElementById('rawRequestInput');
-  if (inputEl) {
-    inputEl.value = TEST_CASES_DATA[tcNum] || '';
+function handleFileUploadSim(e) {
+  const file = e.target.files[0];
+  if (file) {
+    document.getElementById('pageIngestTextarea').value = `[ĐÃ TẢI LÊN TỆP: ${file.name}]\n` + TEST_CASES_SAMPLES[1];
   }
 }
 
-async function executeAgentPipeline() {
-  const rawText = document.getElementById('rawRequestInput').value.trim();
+async function runIngestToParsing() {
+  const rawText = document.getElementById('pageIngestTextarea').value.trim();
   if (!rawText) {
-    alert('Vui lòng nhập hoặc chọn một kịch bản yêu cầu khách hàng.');
+    alert('Vui lòng nhập nội dung yêu cầu khách hàng.');
     return;
   }
-
-  const statusBadge = document.getElementById('pipelineStatusBadge');
-  statusBadge.className = 'status-badge badge-pending';
-  statusBadge.textContent = 'AI Agent đang thực thi...';
 
   try {
     const res = await fetch('/api/process_request', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ raw_text: rawText, source: 'AI Agent Studio Sandbox' })
+      body: JSON.stringify({ raw_text: rawText, source: 'Giao diện tiếp nhận SaaS' })
     });
 
     const data = await res.json();
     if (data.status === 'success') {
-      const opp = data.opportunity;
-      allOpportunities.unshift(opp);
-      renderDashboard(data.summary, allOpportunities);
-      renderAnimatedPipelineSteps(opp);
-      renderOpportunityDetail(opp);
+      currentProcessingOpp = data.opportunity;
+      allOpportunities.unshift(currentProcessingOpp);
 
-      statusBadge.className = 'status-badge badge-eligible';
-      statusBadge.textContent = `Hoàn thành: ${opp.status}`;
+      // Render split view in Page 5
+      renderParsingSplitView(currentProcessingOpp);
+      openSaasPage('page-parsing');
+
+      // Refresh background datasets
+      renderDashboardData(data.summary, allOpportunities);
+      renderApprovalInbox(allOpportunities);
     } else {
       alert('Lỗi: ' + (data.error || 'Không thể xử lý'));
     }
@@ -229,215 +373,353 @@ async function executeAgentPipeline() {
   }
 }
 
-function renderStaticPipelineSteps() {
-  const stepsContainer = document.getElementById('pipelineStepsList');
-  if (!stepsContainer) return;
+function renderParsingSplitView(opp) {
+  document.getElementById('parsingRawContent').textContent = opp.extracted.raw_text;
 
-  const stepsDef = [
-    { num: 1, title: 'Bước 1: Tiếp nhận yêu cầu', agent: 'Request Ingestion', desc: 'Ghi nhận nguồn dữ liệu (Email/Web Form), tạo mã định danh cơ hội và lưu timestamp.' },
-    { num: 2, title: 'Bước 2: Phân loại & Trích xuất thông tin', agent: 'Skill 1: Request Analyzer', desc: 'Trích xuất tên khách hàng, người liên hệ, danh mục sản phẩm, số lượng, ngân sách, thời hạn và chiết khấu.' },
-    { num: 3, title: 'Bước 3: Điểm quyết định 1 (Đầy đủ thông tin?)', agent: 'Validation Engine', desc: 'Kiểm tra các trường dữ liệu bắt buộc. Nếu thiếu, tự sinh câu hỏi làm rõ và chuyển trạng thái "Cần bổ sung".' },
-    { num: 4, title: 'Bước 4: Tạo hồ sơ & Gán Sales phụ trách', agent: 'Opportunity Mgmt', desc: 'Khởi tạo hồ sơ cơ hội B2B chính thức và gán 1 trong 6 chuyên viên kinh doanh theo phân quyền.' },
-    { num: 5, title: 'Bước 5: Thẩm định danh mục, tồn kho & giá', agent: 'Skill 2: Inventory Validator', desc: 'Đối chiếu Master Catalog, kiểm tra tồn kho khả dụng và so sánh thời gian giao hàng với hạn chót khách hàng.' },
-    { num: 6, title: 'Bước 6: Tính giá & Kiểm tra thẩm quyền chiết khấu', agent: 'Skill 3: Pricing Calculator', desc: 'Tính tổng giá trị trước chiết khấu, áp dụng mức ưu đãi và kiểm tra hạn mức thẩm quyền (Sales <=5%, Trưởng phòng <=15%).' },
-    { num: 7, title: 'Bước 7: Điểm quyết định 2 (Phân loại trạng thái)', agent: 'Decision Engine', desc: 'Xác định 1 trong 4 trạng thái: Có thể tiếp tục, Cần bổ sung thông tin, Chưa đáp ứng, hoặc Chờ duyệt.' },
-    { num: 8, title: 'Bước 8: Trưởng phòng Kinh doanh phê duyệt', agent: 'Human Checkpoint 2', desc: 'Nếu vượt thẩm quyền, AI lập Phiếu chuyển duyệt trình Trưởng phòng duyệt. AI chỉ ghi nhận quyết định con người.' },
-    { num: 9, title: 'Bước 9: Hoàn thiện hồ sơ & Bản nháp phản hồi', agent: 'Skill 4: Response Generator', desc: 'Tự động tạo dự thảo email phản hồi khách hàng và chuẩn hóa hồ sơ cơ hội B2B.' },
-    { num: 10, title: 'Bước 10: Kết thúc & Bàn giao quản lý', agent: 'System Handoff', desc: 'Lưu toàn bộ nhật ký truy vết Audit Log và đồng bộ hóa báo cáo lên Dashboard quản trị.' }
-  ];
+  const itemsHtml = opp.validation.items.map(it => `
+    <li style="margin-bottom:4px;">
+      <b>${it.name}</b> (Mã: <code>${it.sku}</code>) — SL: <b>${it.requested_qty}</b> | Tồn kho: <b>${it.stock_available}</b> (${it.stock_status})
+    </li>
+  `).join('');
 
-  stepsContainer.innerHTML = stepsDef.map(s => `
-    <div class="pipeline-step-item">
-      <div class="step-num-badge">${s.num}</div>
-      <div class="step-content">
-        <div class="step-header-row">
-          <span class="step-title">${s.title}</span>
-          <span class="step-agent-tag">${s.agent}</span>
-        </div>
-        <div class="step-detail">${s.desc}</div>
-      </div>
+  const missingHtml = opp.missing_fields.length > 0 
+    ? `<div style="background:#fee2e2; color:#b91c1c; padding:8px 12px; border-radius:8px; margin-top:10px; font-weight:700;">
+        ⚠️ Cảnh báo thiếu thông tin bắt buộc: ${opp.missing_fields.join(', ')}
+       </div>`
+    : `<div style="background:#ecfdf5; color:#065f46; padding:8px 12px; border-radius:8px; margin-top:10px; font-weight:700;">
+        ✓ Thông tin đầy đủ 100% theo quy chuẩn
+       </div>`;
+
+  document.getElementById('parsingResultBox').innerHTML = `
+    <div><b>Mã cơ hội:</b> <code>${opp.id}</code></div>
+    <div><b>Khách hàng:</b> ${opp.customer_name}</div>
+    <div><b>Người liên hệ:</b> ${opp.contact_person} (Email: ${opp.email || 'N/A'})</div>
+    <div><b>Ngân sách dự kiến:</b> ${opp.extracted.budget ? formatCurrency(opp.extracted.budget) : '<span style="color:#ef4444;">Chưa đề cập</span>'}</div>
+    <div><b>Thời hạn triển khai:</b> ${opp.extracted.deadline_days ? opp.extracted.deadline_days + ' ngày' : '<span style="color:#ef4444;">Chưa rõ ngày</span>'}</div>
+    <div><b>Chiết khấu yêu cầu:</b> ${opp.extracted.requested_discount}%</div>
+    
+    <div style="margin-top:10px;"><b>Danh sách sản phẩm trích xuất:</b></div>
+    <ul style="padding-left:18px; margin-top:4px;">${itemsHtml}</ul>
+
+    ${missingHtml}
+
+    <div style="margin-top:14px; padding-top:10px; border-top:1px dashed #fde68a;">
+      <div><b>Trạng thái phân loại:</b> <span class="badge-tag ${getBadgeStyle(opp.status)}">${opp.status}</span></div>
+      <div style="color:#64748b; font-size:12px; margin-top:2px;"><b>Căn cứ:</b> ${opp.status_reason}</div>
     </div>
+  `;
+}
+
+// ==========================================
+// PAGE 6: OPPORTUNITIES MANAGER
+// ==========================================
+function renderAllOpportunitiesTable(opps) {
+  const tbody = document.getElementById('allOppsTableBody');
+  if (!tbody) return;
+
+  tbody.innerHTML = opps.map(o => `
+    <tr>
+      <td><b>${o.id}</b></td>
+      <td>
+        <div style="font-weight:700;">${o.customer_name}</div>
+        <small style="color:#64748b;">${o.email || o.phone}</small>
+      </td>
+      <td>${o.contact_person}</td>
+      <td>${o.created_at || 'Hôm nay'}</td>
+      <td style="font-weight:700;">${o.pricing.total_after_discount > 0 ? formatCurrency(o.pricing.total_after_discount) : 'Chưa xác định'}</td>
+      <td>${o.sales_rep ? o.sales_rep.name : 'N/A'}</td>
+      <td><span class="badge-tag ${getBadgeStyle(o.status)}">${o.status}</span></td>
+      <td>
+        <button class="btn-secondary-tool" onclick="inspectOpportunity('${o.id}')">Chi tiết &rarr;</button>
+      </td>
+    </tr>
   `).join('');
 }
 
-function renderAnimatedPipelineSteps(opp) {
-  const stepsContainer = document.getElementById('pipelineStepsList');
-  if (!stepsContainer) return;
-
-  const itemsList = opp.validation.items.map(it => `${it.name} (SL: ${it.requested_qty}, Kho: ${it.stock_available})`).join(', ');
-
-  const dynamicSteps = [
-    { num: 1, title: 'Bước 1: Tiếp nhận yêu cầu', agent: 'Request Ingestion', detail: `Đã ghi nhận yêu cầu từ ${opp.source}. Tạo mã hồ sơ: ${opp.id}.` },
-    { num: 2, title: 'Bước 2: Phân loại & Trích xuất thông tin', agent: 'Skill 1: Request Analyzer', detail: `Khách hàng: ${opp.customer_name} | Ngân sách: ${opp.extracted.budget ? formatCurrency(opp.extracted.budget) : 'Chưa rõ'} | Hạn: ${opp.extracted.deadline_days || 'Chưa rõ'} ngày.` },
-    { num: 3, title: 'Bước 3: Điểm quyết định 1 (Kiểm tra thông tin)', agent: 'Validation Engine', detail: opp.missing_fields.length > 0 ? `Phát hiện thiếu: ${opp.missing_fields.join(', ')} &rarr; Chuyển nhánh Cần bổ sung.` : 'Thông tin đầy đủ 100% &rarr; Chuyển sang bước thẩm định.' },
-    { num: 4, title: 'Bước 4: Tạo hồ sơ & Gán Sales', agent: 'Opportunity Mgmt', detail: `Đã gán chuyên viên phụ trách: ${opp.sales_rep.name} (${opp.sales_rep.email}).` },
-    { num: 5, title: 'Bước 5: Thẩm định Tồn kho & Đơn giá', agent: 'Skill 2: Inventory Validator', detail: `Sản phẩm: ${itemsList}. Năng lực đáp ứng tồn kho: ${opp.validation.is_all_stock_sufficient ? 'ĐỦ' : 'THIẾU'}.` },
-    { num: 6, title: 'Bước 6: Tính giá & Chính sách chiết khấu', agent: 'Skill 3: Pricing Calculator', detail: `${opp.pricing.math_formula}` },
-    { num: 7, title: 'Bước 7: Điểm quyết định 2 (Phân loại)', agent: 'Decision Engine', detail: `Phân loại: [${opp.status}] — Căn cứ: ${opp.status_reason}` },
-    { num: 8, title: 'Bước 8: Trình Trưởng phòng phê duyệt', agent: 'Human Checkpoint 2', detail: opp.approval_ticket ? `Đã lập Phiếu duyệt: ${opp.approval_ticket.ticket_id} trình ${opp.approval_ticket.approver_target}.` : 'Không vượt hạn mức, bỏ qua bước trình duyệt.' },
-    { num: 9, title: 'Bước 9: Hoàn thiện hồ sơ & Dự thảo Email', agent: 'Skill 4: Response Generator', detail: 'Đã hoàn thiện dự thảo phản hồi khách hàng theo đúng tình trạng thực tế.' },
-    { num: 10, title: 'Bước 10: Kết thúc & Bàn giao', agent: 'System Handoff', detail: 'Hồ sơ đã lưu trữ vào cơ sở dữ liệu và đồng bộ chỉ số Dashboard BI.' }
-  ];
-
-  stepsContainer.innerHTML = dynamicSteps.map(s => `
-    <div class="pipeline-step-item" style="border-left: 4px solid #f43f5e;">
-      <div class="step-num-badge" style="background:#e11d48; color:#fff;">${s.num}</div>
-      <div class="step-content">
-        <div class="step-header-row">
-          <span class="step-title">${s.title}</span>
-          <span class="step-agent-tag" style="background:#ffe4e6; color:#e11d48;">${s.agent}</span>
-        </div>
-        <div class="step-detail">${s.detail}</div>
-      </div>
-    </div>
-  `).join('');
-}
-
-function viewOpportunityDetail(oppId) {
-  const opp = allOpportunities.find(o => o.id === oppId);
-  if (opp) {
-    renderOpportunityDetail(opp);
-    switchTab('tab-details');
-    window.scrollTo({ top: 300, behavior: 'smooth' });
-  }
-}
-
-function renderOpportunityDetail(opp) {
-  activeOpportunity = opp;
-
-  document.getElementById('detOppId').textContent = opp.id;
-  document.getElementById('detCustomerName').textContent = opp.customer_name;
-  document.getElementById('detContactPerson').textContent = opp.contact_person || 'Đại diện Doanh nghiệp';
-  document.getElementById('detEmail').textContent = opp.email || 'N/A';
-  document.getElementById('detPhone').textContent = opp.phone || 'N/A';
-  document.getElementById('detSalesRep').textContent = opp.sales_rep ? opp.sales_rep.name : 'Chưa gán';
-
-  const statusBadge = document.getElementById('detStatusBadge');
-  statusBadge.className = 'status-badge ' + getBadgeClass(opp.status);
-  statusBadge.textContent = opp.status;
-
-  document.getElementById('detCreatedTime').textContent = `Tiếp nhận: ${opp.created_at || 'Hôm nay'}`;
-
-  // 1. Items Table
-  const itemsTbody = document.getElementById('detItemsTableBody');
-  itemsTbody.innerHTML = '';
-  if (opp.validation && opp.validation.items) {
-    opp.validation.items.forEach(it => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><b>${it.sku}</b></td>
-        <td>${it.name}</td>
-        <td>${it.requested_qty} chiếc</td>
-        <td>${formatCurrency(it.unit_price)}</td>
-        <td>${it.stock_available} chiếc</td>
-        <td>${it.standard_lead_days ? it.standard_lead_days + ' ngày' : 'N/A'}</td>
-        <td><span class="status-badge ${it.is_stock_ok ? 'badge-eligible' : 'badge-unfulfilled'}">${it.stock_status}</span></td>
-      `;
-      itemsTbody.appendChild(tr);
-    });
-  }
-
-  // 2. Pricing Box
-  document.getElementById('detTotalBefore').textContent = formatCurrency(opp.pricing.total_before_discount);
-  document.getElementById('detDiscountPct').textContent = `${opp.pricing.discount_percentage}% (-${formatCurrency(opp.pricing.discount_amount)})`;
-  document.getElementById('detTotalAfter').textContent = opp.pricing.total_after_discount > 0 ? formatCurrency(opp.pricing.total_after_discount) : 'Chưa xác định';
-  document.getElementById('detMathFormula').textContent = opp.pricing.math_formula || 'Chưa có công thức';
-
-  // 3. Draft Email
-  document.getElementById('detDraftEmail').textContent = opp.draft_email || 'Chưa có dự thảo email.';
-
-  // 4. Approval Ticket Box
-  const ticketBox = document.getElementById('approvalTicketBox');
-  if (opp.status === 'Chờ duyệt' && opp.approval_ticket) {
-    ticketBox.style.display = 'block';
-    document.getElementById('ticketSalesRep').textContent = opp.sales_rep.name;
-    document.getElementById('ticketManager').textContent = `${opp.approval_ticket.approver_target} (${opp.approval_ticket.approver_title})`;
-    document.getElementById('ticketReason').textContent = opp.approval_ticket.exceeded_reason;
-    document.getElementById('ticketEvidence').textContent = opp.approval_ticket.data_evidence;
+function filterOpportunitiesTable() {
+  const filterVal = document.getElementById('oppStatusFilter').value;
+  if (filterVal === 'ALL') {
+    renderAllOpportunitiesTable(allOpportunities);
   } else {
-    ticketBox.style.display = 'none';
+    const filtered = allOpportunities.filter(o => o.status === filterVal);
+    renderAllOpportunitiesTable(filtered);
   }
 }
 
-async function handleManagerApproval(decision) {
-  if (!activeOpportunity) return;
+function inspectOpportunity(oppId) {
+  const opp = allOpportunities.find(o => o.id === oppId);
+  if (!opp) return;
 
-  const note = prompt(decision === 'APPROVED' ? 'Ghi chú phê duyệt của Trưởng phòng:' : 'Lý do từ chối yêu cầu chiết khấu:', decision === 'APPROVED' ? 'Đồng ý phê duyệt mức chiết khấu hỗ trợ đối tác chiến lược.' : 'Mức chiết khấu không phù hợp biên lợi nhuận.');
+  openSaasPage('page-opportunities');
+  const viewerBox = document.getElementById('oppDetailViewerBox');
+  viewerBox.style.display = 'block';
+  document.getElementById('detailViewerId').textContent = opp.id;
+
+  const itemsRows = opp.validation.items.map(it => `
+    <tr>
+      <td><code>${it.sku}</code></td>
+      <td><b>${it.name}</b></td>
+      <td>${it.requested_qty} chiếc</td>
+      <td>${formatCurrency(it.unit_price)}</td>
+      <td>${it.stock_available} chiếc</td>
+      <td><span class="badge-tag ${it.is_stock_ok ? 'eligible' : 'unfulfilled'}">${it.stock_status}</span></td>
+    </tr>
+  `).join('');
+
+  document.getElementById('detailViewerContent').innerHTML = `
+    <div style="display:grid; grid-template-columns: 2fr 1fr; gap:20px; margin-bottom:20px;">
+      <div>
+        <h3 style="font-size:18px; font-weight:800; color:#1e293b;">${opp.customer_name}</h3>
+        <p style="font-size:13px; color:#64748b;">Người liên hệ: <b>${opp.contact_person}</b> | Email: ${opp.email} | SĐT: ${opp.phone}</p>
+        <p style="font-size:13px; color:#64748b;">Chuyên viên kinh doanh: <b>${opp.sales_rep.name}</b> (${opp.sales_rep.email})</p>
+      </div>
+      <div style="text-align:right;">
+        <span class="badge-tag ${getBadgeStyle(opp.status)}" style="font-size:14px; padding:6px 14px;">${opp.status}</span>
+        <div style="font-size:18px; font-weight:800; color:#b45309; margin-top:8px;">
+          ${opp.pricing.total_after_discount > 0 ? formatCurrency(opp.pricing.total_after_discount) : 'Chưa xác định'}
+        </div>
+      </div>
+    </div>
+
+    <table class="saas-table" style="margin-bottom:20px;">
+      <thead>
+        <tr>
+          <th>Mã SKU</th>
+          <th>Tên Sản Phẩm</th>
+          <th>Số Lượng</th>
+          <th>Đơn Giá</th>
+          <th>Tồn Kho</th>
+          <th>Tình Trạng Kho</th>
+        </tr>
+      </thead>
+      <tbody>${itemsRows}</tbody>
+    </table>
+
+    <div style="background:#fffdf0; padding:16px; border:1px solid #fde68a; border-radius:12px; margin-bottom:16px;">
+      <div style="font-size:13px; font-weight:700; color:#b45309; margin-bottom:4px;">CÔNG THỨC & CĂN CỨ TÍNH TOÁN:</div>
+      <div style="font-family:monospace; font-size:12px;">${opp.pricing.math_formula}</div>
+      <div style="font-size:12.5px; color:#64748b; margin-top:6px;">Lý do nghiệp vụ: <b>${opp.status_reason}</b></div>
+    </div>
+
+    <div style="background:#f8fafc; padding:16px; border:1px solid #e2e8f0; border-radius:12px;">
+      <div style="font-size:13px; font-weight:700; margin-bottom:8px;">✉️ BẢN NHÁP EMAIL PHẢN HỒI KHÁCH HÀNG:</div>
+      <div style="white-space:pre-wrap; font-size:13px; line-height:1.6; color:#334155;">${opp.draft_email}</div>
+    </div>
+  `;
+
+  viewerBox.scrollIntoView({ behavior: 'smooth' });
+}
+
+// ==========================================
+// PAGE 7: VALIDATION & MASTER CATALOG
+// ==========================================
+function renderCatalogTable(catalog) {
+  const tbody = document.getElementById('catalogTableBody');
+  if (!tbody) return;
+
+  tbody.innerHTML = Object.values(catalog).map(p => `
+    <tr>
+      <td><b>${p.sku}</b></td>
+      <td>${p.name}</td>
+      <td>${p.category}</td>
+      <td style="font-weight:700;">${formatCurrency(p.unit_price)}</td>
+      <td><span class="badge-tag ${p.stock_available >= 15 ? 'eligible' : 'unfulfilled'}">${p.stock_available} chiếc</span></td>
+      <td>${p.standard_lead_days} ngày</td>
+      <td>${p.express_lead_days} ngày</td>
+      <td>${p.warranty_months} tháng</td>
+    </tr>
+  `).join('');
+}
+
+function runLiveInventoryValidation() {
+  alert('Đã kiểm tra đồng bộ toàn bộ tồn kho với Master Catalog!');
+  renderCatalogTable(masterCatalog);
+}
+
+// ==========================================
+// PAGE 9: APPROVAL INBOX (TRƯỞNG PHÒNG)
+// ==========================================
+function renderApprovalInbox(opps) {
+  const container = document.getElementById('approvalPendingContainer');
+  if (!container) return;
+
+  const pendingOpps = opps.filter(o => o.status === 'Chờ duyệt');
+  if (pendingOpps.length === 0) {
+    container.innerHTML = `
+      <div class="saas-card" style="text-align:center; padding:40px; color:#64748b;">
+        <div style="font-size:32px;">✓</div>
+        <div style="font-size:16px; font-weight:700; color:#1e293b; margin-top:8px;">Hộp thư phê duyệt sạch sẽ</div>
+        <p style="font-size:13px; margin-top:4px;">Hiện không có cơ hội nào đang chờ Trưởng phòng phê duyệt.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = pendingOpps.map(o => `
+    <div class="saas-card" style="border-left:4px solid #8b5cf6;">
+      <div class="saas-card-title-row">
+        <div>
+          <div style="font-size:16px; font-weight:800; color:#6b21a8;">
+            📑 PHIẾU CHUYỂN DUYỆT: ${o.id} — ${o.customer_name}
+          </div>
+          <small style="color:#64748b;">Trình duyệt bởi chuyên viên: <b>${o.sales_rep.name}</b></small>
+        </div>
+        <span class="badge-tag pending">Chờ Quyết Định</span>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:14px; font-size:13px;">
+        <div>
+          <div><b>Tổng giá trị đề xuất:</b> <span style="font-size:16px; font-weight:800; color:#b45309;">${formatCurrency(o.pricing.total_after_discount)}</span></div>
+          <div><b>Mức chiết khấu yêu cầu:</b> <span style="color:#dc2626; font-weight:700;">${o.pricing.discount_percentage}% (-${formatCurrency(o.pricing.discount_amount)})</span></div>
+        </div>
+        <div>
+          <div><b>Lý do chuyển duyệt:</b> <span style="color:#6b21a8; font-weight:600;">${o.pricing.approval_reason}</span></div>
+          <div><b>Căn cứ dữ liệu:</b> Kho đủ tồn, khách hàng cam kết thanh toán ngay.</div>
+        </div>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:10px; padding-top:12px; border-top:1px dashed #e2e8f0;">
+        <button class="btn-primary-action" style="background:#16a34a;" onclick="submitManagerDecision('${o.id}', 'APPROVED')">
+          <span>✓ Phê Duyệt Chiết Khấu</span>
+        </button>
+        <button class="btn-secondary-tool" style="color:#dc2626; border-color:#fca5a5;" onclick="submitManagerDecision('${o.id}', 'REJECTED')">
+          <span>✕ Từ Chối</span>
+        </button>
+        <button class="btn-secondary-tool" onclick="submitManagerDecision('${o.id}', 'REVISE')">
+          <span>✏️ Yêu Cầu Chỉnh Sửa</span>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function submitManagerDecision(oppId, decision) {
+  const note = prompt(decision === 'APPROVED' ? 'Ghi chú phê duyệt của Trưởng phòng:' : 'Lý do từ chối hoặc yêu cầu sửa:');
   if (note === null) return;
 
   try {
     const res = await fetch('/api/approve', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        opp_id: activeOpportunity.id,
-        decision: decision,
-        note: note
-      })
+      body: JSON.stringify({ opp_id: oppId, decision, note })
     });
 
     const data = await res.json();
     if (data.status === 'success') {
-      alert(`Đã ghi nhận quyết định của Trưởng phòng: [${decision === 'APPROVED' ? 'PHÊ DUYỆT' : 'TỪ CHỐI'}]`);
-      const idx = allOpportunities.findIndex(o => o.id === activeOpportunity.id);
+      alert(`Đã lưu quyết định: [${decision}] cho cơ hội ${oppId}!`);
+      const idx = allOpportunities.findIndex(o => o.id === oppId);
       if (idx !== -1) {
         allOpportunities[idx] = data.updated_opportunity;
       }
-      renderDashboard(data.summary, allOpportunities);
-      renderOpportunityDetail(data.updated_opportunity);
+      renderDashboardData(data.summary, allOpportunities);
+      renderApprovalInbox(allOpportunities);
+      renderAllOpportunitiesTable(allOpportunities);
+      renderReportsTable(data.summary, allOpportunities);
     } else {
-      alert('Không thể thực hiện phê duyệt: ' + data.error);
+      alert('Lỗi: ' + data.error);
     }
   } catch (err) {
-    console.error(err);
     alert('Lỗi kết nối máy chủ');
   }
+}
+
+// ==========================================
+// PAGE 10: REPORTS & AUDIT LOGS
+// ==========================================
+function renderReportsTable(summary, opps) {
+  const tbody = document.getElementById('reportStatsTableBody');
+  if (!tbody || !summary) return;
+
+  const totalOpps = opps.length;
+  tbody.innerHTML = `
+    <tr>
+      <td><span class="badge-tag eligible">Có thể tiếp tục</span></td>
+      <td>Đáp ứng đầy đủ danh mục, tồn kho, giá và thẩm quyền Sales</td>
+      <td><b>${summary.eligible.count}</b></td>
+      <td>${((summary.eligible.count / (totalOpps || 1)) * 100).toFixed(1)}%</td>
+      <td style="font-weight:800; color:#059669;">${formatCurrency(summary.eligible.total_value)}</td>
+    </tr>
+    <tr>
+      <td><span class="badge-tag pending">Chờ duyệt</span></td>
+      <td>Chiết khấu > 5% hoặc đơn hàng lớn >= 500 triệu VNĐ</td>
+      <td><b>${summary.pending_approval.count}</b></td>
+      <td>${((summary.pending_approval.count / (totalOpps || 1)) * 100).toFixed(1)}%</td>
+      <td style="font-weight:800; color:#7c3aed;">${formatCurrency(summary.pending_approval.total_value)}</td>
+    </tr>
+    <tr>
+      <td><span class="badge-tag missing">Cần bổ sung thông tin</span></td>
+      <td>Thiếu ngân sách, thời hạn hoặc số lượng sản phẩm</td>
+      <td><b>${summary.missing_info.count}</b></td>
+      <td>${((summary.missing_info.count / (totalOpps || 1)) * 100).toFixed(1)}%</td>
+      <td style="color:#94a3b8; font-style:italic;">Chưa xác định (Không cộng dồn)</td>
+    </tr>
+    <tr>
+      <td><span class="badge-tag unfulfilled">Chưa đáp ứng</span></td>
+      <td>Hết tồn kho, không kịp tiến độ hoặc vượt quá ngân sách</td>
+      <td><b>${summary.unfulfilled.count}</b></td>
+      <td>${((summary.unfulfilled.count / (totalOpps || 1)) * 100).toFixed(1)}%</td>
+      <td style="color:#94a3b8; font-style:italic;">Chưa xác định (Không cộng dồn)</td>
+    </tr>
+  `;
 }
 
 async function loadAuditLogs() {
   try {
     const res = await fetch('/api/audit_logs');
     const logs = await res.json();
-    const tbody = document.getElementById('auditTableBody');
+    const tbody = document.getElementById('auditLogPageTbody');
     if (!tbody) return;
 
     tbody.innerHTML = logs.map(l => `
       <tr>
-        <td style="font-family: monospace; font-size: 11px;">${l.timestamp}</td>
+        <td style="font-family:monospace; font-size:11px;">${l.timestamp}</td>
         <td><b>${l.opp_id}</b></td>
         <td>${l.step}</td>
-        <td style="color: #e11d48; font-weight: 700;">${l.skill}</td>
+        <td style="color:#b45309; font-weight:700;">${l.skill}</td>
         <td>${l.action}</td>
-        <td style="font-size: 11.5px; color: #64748b;">${l.rule}</td>
-        <td>${l.human_checkpoint ? '<span class="status-badge badge-pending">Có can thiệp</span>' : '<span style="color:#94a3b8;">Tự động</span>'}</td>
+        <td style="font-size:11.5px; color:#64748b;">${l.rule}</td>
+        <td>${l.human_checkpoint ? '<span class="badge-tag pending">Có can thiệp</span>' : '<span style="color:#94a3b8;">Tự động</span>'}</td>
       </tr>
     `).join('');
   } catch (err) {
-    console.error('Lỗi tải audit logs:', err);
+    console.error(err);
   }
 }
 
+// ==========================================
+// PAGE 12: DATA MANAGEMENT
+// ==========================================
+async function handleUploadNewData() {
+  const text = document.getElementById('newDataTextarea').value.trim();
+  if (!text) {
+    alert('Vui lòng nhập định dạng JSON dữ liệu sản phẩm!');
+    return;
+  }
+
+  try {
+    const parsed = JSON.parse(text);
+    const res = await fetch('/api/data_upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'PRODUCT_CATALOG', items: parsed })
+    });
+    const data = await res.json();
+    alert(data.message || 'Đã nạp dữ liệu thành công!');
+    await loadBackendData();
+  } catch (e) {
+    alert('Định dạng JSON không hợp lệ: ' + e.message);
+  }
+}
+
+// ==========================================
+// EXPORTS & HELPERS
+// ==========================================
 function exportWordReport() {
-  const oppId = activeOpportunity ? activeOpportunity.id : '';
-  window.open(`/api/export/word?id=${oppId}`, '_blank');
+  window.open('/api/export/word', '_blank');
 }
 
 function exportCsvReport() {
   window.open('/api/export/csv', '_blank');
-}
-
-async function resetDemoData() {
-  if (confirm('Khôi phục lại dữ liệu 4 Test Cases chuẩn ban đầu?')) {
-    await fetch('/api/reset_demo', { method: 'POST' });
-    initApp();
-  }
-}
-
-function copyDraftEmail() {
-  const text = document.getElementById('detDraftEmail').textContent;
-  navigator.clipboard.writeText(text).then(() => {
-    alert('Đã sao chép nội dung email vào Clipboard!');
-  });
 }
 
 function formatCurrency(val) {
@@ -445,12 +727,12 @@ function formatCurrency(val) {
   return Number(val).toLocaleString('vi-VN') + ' đ';
 }
 
-function getBadgeClass(status) {
+function getBadgeStyle(status) {
   switch (status) {
-    case 'Có thể tiếp tục': return 'badge-eligible';
-    case 'Cần bổ sung thông tin': return 'badge-missing';
-    case 'Chưa đáp ứng': return 'badge-unfulfilled';
-    case 'Chờ duyệt': return 'badge-pending';
-    default: return 'badge-missing';
+    case 'Có thể tiếp tục': return 'eligible';
+    case 'Cần bổ sung thông tin': return 'missing';
+    case 'Chưa đáp ứng': return 'unfulfilled';
+    case 'Chờ duyệt': return 'pending';
+    default: return 'missing';
   }
 }

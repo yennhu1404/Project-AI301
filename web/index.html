@@ -3,734 +3,925 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Minh An B2B AI Agent - DataLens Studio | Lê Yến Như</title>
+  <title>Minh An AI Agent - Hệ Thống Xử Lý Cơ Hội Bán Hàng B2B | Lê Yến Như</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/style.css?v=yellow">
+  <link rel="stylesheet" href="/style.css?v=multi_page_yellow">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-  <!-- Background delicate ambient bokeh -->
-  <div class="bg-ambient-bokeh">
-    <div class="bokeh-1"></div>
-    <div class="bokeh-2"></div>
-  </div>
+  <!-- ====================================================================
+       1. PUBLIC AREA: LANDING PAGE (PASTEL YELLOW GREETING)
+       ==================================================================== -->
+  <div id="publicLandingView">
+    <!-- Delicate floating bokeh -->
+    <div class="bg-ambient-bokeh">
+      <div class="bokeh-1"></div>
+      <div class="bokeh-2"></div>
+    </div>
 
-  <div class="app-container">
-
-    <!-- ====================================================================
-         HERO WINDOW CARD (MATCHES USER'S SCREENSHOT PIXEL-BY-PIXEL)
-         ==================================================================== -->
-    <header class="hero-window-card" id="heroCard">
-      <!-- Top Title Bar -->
-      <div class="window-title-bar">
-        <div class="window-dots">
-          <span class="window-dot dot-red"></span>
-          <span class="window-dot dot-yellow"></span>
-          <span class="window-dot dot-green"></span>
-          <span class="window-title">DataLens Studio · Enterprise BI — Minh An Company</span>
-        </div>
-        <div class="window-status-pill">
-          <span class="status-indicator-dot"></span>
-          AI v2.5 ONLINE
-        </div>
-      </div>
-
-      <!-- Hero Card Body -->
-      <div class="hero-card-body">
-        <!-- Left Profile Column -->
-        <div class="hero-left-profile">
-          <div class="avatar-halo-wrapper">
-            <div class="avatar-inner-ring">
-              <img src="/assets/avatar.png?v=2" alt="Lê Yến Như" class="avatar-img" onerror="this.src='https://api.dicebear.com/7.x/lorelei/png?seed=LeYenNhu&size=256&backgroundColor=fef08a'">
-            </div>
-          </div>
-          
-          <div class="profile-name-badge">
-            <span>✦</span> Lê Yến Như · Data Analyst & BI
-          </div>
-
-          <div class="profile-stats-row">
-            <div class="stat-item">
-              <span class="stat-num">4 Bước</span>
-              <span class="stat-lbl">Chuẩn xác</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-              <span class="stat-num">10+</span>
-              <span class="stat-lbl">Định dạng</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-              <span class="stat-num">100%</span>
-              <span class="stat-lbl">Minh bạch</span>
-            </div>
+    <div class="landing-container">
+      <!-- Landing Header / Top Navigation -->
+      <header class="landing-top-nav">
+        <div class="brand-wrapper">
+          <div class="brand-icon-box">MA</div>
+          <div>
+            <div class="brand-text-title">MINH AN COMPANY</div>
+            <div class="brand-text-sub">AI AGENT B2B PLATFORM</div>
           </div>
         </div>
 
-        <!-- Right Content Column -->
-        <div class="hero-right-content">
-          <h1 class="hero-main-title">
-            Chào mừng bạn đến với<br>
-            Web của <span class="highlight-author">Lê Yến Như</span>
-          </h1>
+        <ul class="landing-nav-links">
+          <li><a href="#heroCard">Trang chủ</a></li>
+          <li><a href="#aboutSection">Giới thiệu</a></li>
+          <li><a href="#featuresSection">Tính năng</a></li>
+          <li><a href="#contactSection">Liên hệ</a></li>
+        </ul>
 
-          <p class="hero-sub-desc">
-            Nền tảng trợ lý dữ liệu AI giúp tiếp nhận, kiểm tra định dạng, làm sạch minh bạch và xuất Dashboard KPI, Excel, Báo cáo Word chuẩn doanh nghiệp.
-          </p>
-
-          <!-- 4 Feature Pills -->
-          <div class="hero-feature-tags-grid">
-            <div class="feature-tag-pill tag-pink" onclick="switchTab('tab-studio')">
-              <span class="tag-num">01</span>
-              <span>Kết nối & Trao đổi (Skill 1)</span>
-            </div>
-            <div class="feature-tag-pill tag-orange" onclick="switchTab('tab-details')">
-              <span class="tag-num">02</span>
-              <span>Làm sạch & Duyệt (Skill 2-3)</span>
-            </div>
-            <div class="feature-tag-pill tag-emerald" onclick="switchTab('tab-dashboard')">
-              <span class="tag-num">03</span>
-              <span>Dashboard BI 3D (KPI)</span>
-            </div>
-            <div class="feature-tag-pill tag-purple" onclick="exportWordReport()">
-              <span class="tag-num">04</span>
-              <span>Xuất Word · Excel</span>
-            </div>
-          </div>
-
-          <!-- Bottom CTA Row -->
-          <div class="hero-cta-row">
-            <button class="btn-hero-cta" onclick="startExperience()">
-              <span>Bắt đầu trải nghiệm</span>
-              <span>&rarr;</span>
-            </button>
-            <span class="security-badge-text">
-              🔒 Bảo mật Session · Phân quyền riêng
-            </span>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <!-- ====================================================================
-         MAIN NAVIGATION TABS
-         ==================================================================== -->
-    <nav class="main-nav-tabs-container" id="mainNav">
-      <div class="nav-tabs-left">
-        <button class="tab-btn active" data-tab="tab-dashboard" onclick="switchTab('tab-dashboard')">
-          <span>📊</span>
-          <span>Dashboard BI & Tổng Hợp</span>
+        <button class="btn-nav-login" onclick="navigateTo('login')">
+          <span>🔒 Đăng nhập hệ thống</span>
         </button>
-        <button class="tab-btn" data-tab="tab-studio" onclick="switchTab('tab-studio')">
-          <span>🤖</span>
-          <span>AI Agent Studio (10 Bước)</span>
-        </button>
-        <button class="tab-btn" data-tab="tab-details" onclick="switchTab('tab-details')">
-          <span>📄</span>
-          <span>Hồ Sơ & Báo Giá</span>
-          <span class="tab-badge" id="navBadgeTotal">4</span>
-        </button>
-        <button class="tab-btn" data-tab="tab-audit" onclick="switchTab('tab-audit')">
-          <span>🛡️</span>
-          <span>Audit Log Truy Vết</span>
-        </button>
-        <button class="tab-btn" data-tab="tab-docs" onclick="switchTab('tab-docs')">
-          <span>📋</span>
-          <span>Flowchart & Đề Án</span>
-        </button>
-      </div>
+      </header>
 
-      <div class="nav-actions-right">
-        <button class="btn-secondary-action" onclick="exportWordReport()">
-          <span>📝 Xuất Word (.doc)</span>
-        </button>
-        <button class="btn-secondary-action" onclick="exportCsvReport()">
-          <span>📊 Xuất Excel (.csv)</span>
-        </button>
-        <button class="btn-secondary-action" onclick="resetDemoData()">
-          <span>🔄 Khôi phục Demo</span>
-        </button>
-      </div>
-    </nav>
-
-    <!-- ====================================================================
-         TAB 1: DASHBOARD BI & TỔNG HỢP TOÀN BỘ CƠ HỘI
-         ==================================================================== -->
-    <section id="tab-dashboard" class="tab-content active">
-      <!-- 4 Status KPI Summary Cards -->
-      <div class="stats-cards-grid">
-        <div class="kpi-card card-eligible">
-          <div class="kpi-header">
-            <span class="kpi-title">CÓ THỂ TIẾP TỤC</span>
-            <div class="kpi-icon-pill icon-eligible">✓</div>
+      <!-- Hero Window Card (Pastel Yellow - Le Yen Nhu) -->
+      <section class="hero-window-card" id="heroCard">
+        <div class="window-title-bar">
+          <div class="window-dots">
+            <span class="window-dot dot-red"></span>
+            <span class="window-dot dot-yellow"></span>
+            <span class="window-dot dot-green"></span>
+            <span class="window-title">DataLens Studio · Enterprise BI — Minh An Company</span>
           </div>
-          <div class="kpi-count-row">
-            <span class="kpi-count" id="countEligible">1</span>
-            <span class="kpi-count-unit">cơ hội</span>
-          </div>
-          <div class="kpi-value-row">
-            <span class="kpi-val-label">Tổng giá trị:</span>
-            <span class="kpi-val-amount val-eligible" id="valEligible">197,760,000 đ</span>
+          <div class="window-status-pill">
+            <span class="status-indicator-dot"></span>
+            AI v2.5 ONLINE
           </div>
         </div>
 
-        <div class="kpi-card card-pending">
-          <div class="kpi-header">
-            <span class="kpi-title">CHỜ DUYỆT (TRƯỞNG PHÒNG)</span>
-            <div class="kpi-icon-pill icon-pending">⏳</div>
-          </div>
-          <div class="kpi-count-row">
-            <span class="kpi-count" id="countPending">1</span>
-            <span class="kpi-count-unit">cơ hội</span>
-          </div>
-          <div class="kpi-value-row">
-            <span class="kpi-val-label">Tổng giá trị:</span>
-            <span class="kpi-val-amount val-pending" id="valPending">661,500,000 đ</span>
-          </div>
-        </div>
-
-        <div class="kpi-card card-missing">
-          <div class="kpi-header">
-            <span class="kpi-title">CẦN BỔ SUNG THÔNG TIN</span>
-            <div class="kpi-icon-pill icon-missing">⚠️</div>
-          </div>
-          <div class="kpi-count-row">
-            <span class="kpi-count" id="countMissing">1</span>
-            <span class="kpi-count-unit">cơ hội</span>
-          </div>
-          <div class="kpi-value-row">
-            <span class="kpi-val-label">Giá trị pipeline:</span>
-            <span class="kpi-val-amount val-muted">Chưa xác định</span>
-          </div>
-        </div>
-
-        <div class="kpi-card card-unfulfilled">
-          <div class="kpi-header">
-            <span class="kpi-title">CHƯA ĐÁP ỨNG</span>
-            <div class="kpi-icon-pill icon-unfulfilled">✕</div>
-          </div>
-          <div class="kpi-count-row">
-            <span class="kpi-count" id="countUnfulfilled">1</span>
-            <span class="kpi-count-unit">cơ hội</span>
-          </div>
-          <div class="kpi-value-row">
-            <span class="kpi-val-label">Giá trị pipeline:</span>
-            <span class="kpi-val-amount val-muted">Chưa xác định</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Charts & Opportunity List -->
-      <div class="dashboard-grid-2col">
-        <!-- Left: Opportunities Table -->
-        <div class="content-box">
-          <div class="box-title-row">
-            <div class="box-title">
-              <span>📋 Danh Sách Cơ Hội Bán Hàng B2B</span>
+        <div class="hero-card-body">
+          <!-- Left Column -->
+          <div class="hero-left-profile">
+            <div class="avatar-halo-wrapper">
+              <div class="avatar-inner-ring">
+                <img src="/assets/avatar.png?v=2" alt="Lê Yến Như" class="avatar-img" onerror="this.src='https://api.dicebear.com/7.x/lorelei/png?seed=LeYenNhu&size=256&backgroundColor=fef08a'">
+              </div>
             </div>
-            <span style="font-size: 12px; color: #64748b;" id="oppsSubtitle">Tổng 4 cơ hội | Minh An Company</span>
-          </div>
-          
-          <div style="overflow-x: auto;">
-            <table class="custom-table" id="opportunitiesTable">
-              <thead>
-                <tr>
-                  <th>Mã Cơ Hội</th>
-                  <th>Khách Hàng</th>
-                  <th>Trạng Thái</th>
-                  <th>Tổng Giá Trị</th>
-                  <th>Sales Phụ Trách</th>
-                  <th>Thao Tác</th>
-                </tr>
-              </thead>
-              <tbody id="oppsTableBody">
-                <!-- Injected via JavaScript -->
-              </tbody>
-            </table>
-          </div>
-        </div>
+            
+            <div class="profile-name-badge">
+              <span>✦</span> Lê Yến Như · Data Analyst & BI
+            </div>
 
-        <!-- Right: BI Charts -->
-        <div class="content-box">
-          <div class="box-title-row">
-            <div class="box-title">
-              <span>📈 Phân Bổ Trạng Thái Cơ Hội</span>
+            <div class="profile-stats-row">
+              <div class="stat-item">
+                <span class="stat-num">4 Bước</span>
+                <span class="stat-lbl">Chuẩn xác</span>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat-item">
+                <span class="stat-num">10+</span>
+                <span class="stat-lbl">Định dạng</span>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat-item">
+                <span class="stat-num">100%</span>
+                <span class="stat-lbl">Minh bạch</span>
+              </div>
             </div>
           </div>
-          <div style="height: 220px; position: relative;">
-            <canvas id="statusPieChart"></canvas>
+
+          <!-- Right Column -->
+          <div class="hero-right-content">
+            <span class="hero-badge-tag">AI-POWERED B2B SALES OPPORTUNITY MANAGEMENT</span>
+
+            <h1 class="hero-main-title">
+              Quản lý và xử lý cơ hội bán hàng B2B thông minh với AI Agent<br>
+              Web của <span class="highlight-author">Lê Yến Như</span>
+            </h1>
+
+            <p class="hero-sub-desc">
+              Hệ thống AI Agent hỗ trợ tự động hóa quy trình tiếp nhận yêu cầu, phân tích dữ liệu khách hàng, thẩm định sản phẩm, kiểm tra tồn kho, tính toán báo giá và quản lý phê duyệt. Giúp Minh An Company nâng cao độ chính xác, tiết kiệm thời gian và kiểm soát toàn bộ cơ hội kinh doanh.
+            </p>
+
+            <div class="hero-feature-tags-grid">
+              <div class="feature-tag-pill tag-pink">
+                <span class="tag-num">01</span>
+                <span>Tiếp nhận & Bóc tách NLP</span>
+              </div>
+              <div class="feature-tag-pill tag-orange">
+                <span class="tag-num">02</span>
+                <span>Thẩm định Kho & Bảng giá</span>
+              </div>
+              <div class="feature-tag-pill tag-emerald">
+                <span class="tag-num">03</span>
+                <span>Tính chiết khấu & Hạn mức</span>
+              </div>
+              <div class="feature-tag-pill tag-purple">
+                <span class="tag-num">04</span>
+                <span>Phiếu chuyển duyệt & Báo cáo</span>
+              </div>
+            </div>
+
+            <div class="hero-cta-row">
+              <button class="btn-hero-cta" onclick="navigateTo('login')">
+                <span>Bắt đầu trải nghiệm</span>
+                <span>&rarr;</span>
+              </button>
+              <button class="btn-hero-secondary" onclick="scrollToFeatures()">
+                <span>Tìm hiểu hệ thống</span>
+              </button>
+              <span class="security-badge-text">
+                🔒 Bảo mật Session · Phân quyền nội bộ
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4 Core Feature Groups Section -->
+      <section class="landing-features-section" id="featuresSection">
+        <div class="section-header-center">
+          <span class="section-eyebrow">Enterprise Capabilities</span>
+          <h2 class="section-title">4 Nhóm Kỹ Năng Nghiệp Vụ Cốt Lõi Của AI Agent</h2>
+        </div>
+
+        <div class="features-cards-grid">
+          <div class="feature-box-card">
+            <div class="feat-icon-circle">🤖</div>
+            <h3 class="feat-title">1. AI Request Analysis</h3>
+            <p class="feat-desc">
+              Tự động đọc hiểu văn bản tự nhiên từ Email và Biểu mẫu. Bóc tách khách hàng, mã sản phẩm, số lượng, ngân sách dự án và thời hạn bàn giao cam kết.
+            </p>
           </div>
 
-          <div style="margin-top: 20px; padding-top: 14px; border-top: 1px dashed rgba(254, 205, 214, 0.6);">
-            <div style="font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 8px;">
-              ⚡ Quy tắc tính tổng Pipeline:
-            </div>
-            <p style="font-size: 12px; color: #64748b; line-height: 1.5;">
-              • Tính riêng giá trị <b>Có thể tiếp tục</b> và <b>Chờ duyệt</b>.<br>
-              • Không cộng dồn các cơ hội thiếu dữ liệu hoặc chưa đáp ứng.<br>
-              • Không ước lượng số liệu khi thiếu căn cứ xác minh.
+          <div class="feature-box-card">
+            <div class="feat-icon-circle">📦</div>
+            <h3 class="feat-title">2. Smart Product Validation</h3>
+            <p class="feat-desc">
+              Đối chiếu danh mục sản phẩm chính thức với Master Catalog. Kiểm tra tồn kho khả dụng thời gian thực và đánh giá tính khả thi tiến độ giao hàng.
+            </p>
+          </div>
+
+          <div class="feature-box-card">
+            <div class="feat-icon-circle">💰</div>
+            <h3 class="feat-title">3. Intelligent Pricing & Approval</h3>
+            <p class="feat-desc">
+              Tính toán đơn giá niêm yết, áp dụng chính sách chiết khấu. Phát hiện trường hợp vượt quyền (>5% hoặc hợp đồng lớn) để lập Phiếu chuyển duyệt Trưởng phòng.
+            </p>
+          </div>
+
+          <div class="feature-box-card">
+            <div class="feat-icon-circle">📊</div>
+            <h3 class="feat-title">4. Opportunity Management</h3>
+            <p class="feat-desc">
+              Khởi tạo hồ sơ cơ hội B2B chuẩn hóa, quản lý 4 trạng thái nghiệp vụ, tự động soạn dự thảo email phản hồi khách hàng và xuất báo cáo Word/Excel.
             </p>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- ====================================================================
-         TAB 2: AI AGENT STUDIO (10 BƯỚC TO-BE)
-         ==================================================================== -->
-    <section id="tab-studio" class="tab-content" style="display: none;">
-      <div class="studio-layout-grid">
-        <!-- Left: Test Cases & Input Form -->
-        <div class="content-box">
-          <div class="box-title-row">
-            <div class="box-title">
-              <span>🧪 Bộ Kịch Bản Kiểm Thử</span>
-            </div>
-          </div>
-
-          <div class="test-cases-selector">
-            <div class="test-case-card-btn active" onclick="loadTestCase(1, this)">
-              <span class="tc-tag badge-eligible">Test Case 1: Tiêu Chuẩn</span>
-              <span class="tc-title">DigiTech - 10 Laptop + 5 Màn hình</span>
-              <span class="tc-desc">Đầy đủ thông tin, tồn kho đủ, CK 4% &le; 5% &rarr; Đủ điều kiện</span>
-            </div>
-
-            <div class="test-case-card-btn" onclick="loadTestCase(2, this)">
-              <span class="tc-tag badge-missing">Test Case 2: Thiếu Dữ Liệu</span>
-              <span class="tc-title">An Khang Pharma - Server & Switch</span>
-              <span class="tc-desc">Thiếu ngân sách, thời hạn, số lượng switch &rarr; Cần bổ sung</span>
-            </div>
-
-            <div class="test-case-card-btn" onclick="loadTestCase(3, this)">
-              <span class="tc-tag badge-pending">Test Case 3: Ranh Giới Quy Tắc</span>
-              <span class="tc-title">Global Telecom - 30 Router (CK 10%)</span>
-              <span class="tc-desc">CK 10% &gt; 5% &amp; HĐ 661.5M &gt; 500M &rarr; Chờ Trưởng phòng duyệt</span>
-            </div>
-
-            <div class="test-case-card-btn" onclick="loadTestCase(4, this)">
-              <span class="tc-tag badge-unfulfilled">Test Case 4: Không Đáp Ứng</span>
-              <span class="tc-title">Grand Plaza - 50 Máy in Laser</span>
-              <span class="tc-desc">Kho còn 12 máy, hạn 3 ngày &lt; 24 ngày nhập &rarr; Chưa đáp ứng</span>
-            </div>
-          </div>
-
-          <div style="margin-top: 14px;">
-            <label style="font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px; display: block;">
-              Nội dung yêu cầu khách hàng (Email / Form):
-            </label>
-            <textarea id="rawRequestInput" class="request-input-textarea" placeholder="Dán nội dung email hoặc yêu cầu khách hàng vào đây..."></textarea>
-          </div>
-
-          <button class="btn-run-agent-pipeline" onclick="executeAgentPipeline()">
-            <span>⚡ Phân Tích & Xử Lý Bằng AI Agent</span>
-          </button>
+      <!-- Landing Footer -->
+      <footer class="landing-footer" id="contactSection">
+        <div>
+          <b>CÔNG TY CÔNG NGHỆ MINH AN</b> — AI Agent B2B Sales Opportunity Management System.
         </div>
-
-        <!-- Right: 10-Step Pipeline Visualizer -->
-        <div class="content-box">
-          <div class="box-title-row">
-            <div class="box-title">
-              <span>🔄 Luồng 10 Bước Quy Trình TO-BE Khép Kín</span>
-            </div>
-            <span class="status-badge badge-eligible" id="pipelineStatusBadge">Sẵn sàng thực thi</span>
-          </div>
-
-          <div class="pipeline-steps-container" id="pipelineStepsList">
-            <!-- 10 Steps will be highlighted here -->
-          </div>
+        <div>
+          Chủ nhiệm đề án: <b>Lê Yến Như</b> | Hotline: 1900 6868 | Email: contact@minhan.com.vn
         </div>
-      </div>
-    </section>
-
-    <!-- ====================================================================
-         TAB 3: CHI TIẾT HỒ SƠ & BÁO GIÁ
-         ==================================================================== -->
-    <section id="tab-details" class="tab-content" style="display: none;">
-      <!-- Opportunity Meta Card -->
-      <div class="opp-detail-header-card" id="detailHeaderCard">
-        <div class="opp-meta-left">
-          <span class="opp-id-tag" id="detOppId">OPP-2026-001</span>
-          <h2 class="opp-customer-name" id="detCustomerName">Công ty Cổ phần Công nghệ DigiTech</h2>
-          <div class="opp-contact-line">
-            <span>👤 <b id="detContactPerson">Trần Văn Hùng</b></span>
-            <span>✉️ <span id="detEmail">hung.tran@digitech.vn</span></span>
-            <span>📞 <span id="detPhone">0912345678</span></span>
-            <span>💼 Sales: <b id="detSalesRep">Nguyễn Văn An</b></span>
-          </div>
-        </div>
-        <div class="opp-status-right">
-          <span class="status-badge badge-eligible" id="detStatusBadge" style="font-size: 14px; padding: 6px 16px;">Có thể tiếp tục</span>
-          <span style="font-size: 12px; color: #64748b;" id="detCreatedTime">Tiếp nhận: Hôm nay</span>
-        </div>
-      </div>
-
-      <!-- Items & Inventory Breakdown -->
-      <div class="artifact-box">
-        <div class="box-title-row">
-          <div class="box-title">
-            <span>📦 Bảng Thẩm Định Danh Mục, Tồn Kho & Đơn Giá</span>
-          </div>
-          <span style="font-size: 12px; color: #64748b;">Skill 2: Product &amp; Inventory Validator</span>
-        </div>
-
-        <table class="custom-table">
-          <thead>
-            <tr>
-              <th>Mã SKU</th>
-              <th>Tên Sản Phẩm</th>
-              <th>Số Lượng</th>
-              <th>Đơn Giá Niêm Yết</th>
-              <th>Tồn Khả Dụng</th>
-              <th>Thời Gian Giao</th>
-              <th>Trạng Thái Kho</th>
-            </tr>
-          </thead>
-          <tbody id="detItemsTableBody">
-            <!-- Items injected here -->
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pricing & Discount Calculation -->
-      <div class="artifact-box">
-        <div class="box-title-row">
-          <div class="box-title">
-            <span>💰 Bảng Tính Giá Trị Đề Xuất & Chính Sách Chiết Khấu</span>
-          </div>
-          <span style="font-size: 12px; color: #64748b;">Skill 3: Pricing &amp; Discount Calculator</span>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px;">
-          <div style="background: #f8fafc; padding: 14px; border-radius: 12px; border: 1px solid #e2e8f0;">
-            <div style="font-size: 12px; color: #64748b;">Tổng giá trị trước chiết khấu:</div>
-            <div style="font-size: 18px; font-weight: 800; color: #1e293b;" id="detTotalBefore">206,000,000 đ</div>
-          </div>
-          <div style="background: #f8fafc; padding: 14px; border-radius: 12px; border: 1px solid #e2e8f0;">
-            <div style="font-size: 12px; color: #64748b;">Mức chiết khấu áp dụng:</div>
-            <div style="font-size: 18px; font-weight: 800; color: #e11d48;" id="detDiscountPct">4.0% (-8,240,000 đ)</div>
-          </div>
-          <div style="background: #fdf2f4; padding: 14px; border-radius: 12px; border: 1px solid #fed7df;">
-            <div style="font-size: 12px; color: #e11d48; font-weight: 700;">TỔNG THANH TOÁN (Chưa VAT):</div>
-            <div style="font-size: 20px; font-weight: 800; color: #e11d48;" id="detTotalAfter">197,760,000 đ</div>
-          </div>
-        </div>
-
-        <div class="step-data-pill" id="detMathFormula">
-          Công thức: Tổng = Sum(10 * 18,500,000 + 5 * 4,200,000) = 206,000,000 đ - 4% = 197,760,000 đ
-        </div>
-      </div>
-
-      <!-- Draft Email Response -->
-      <div class="artifact-box">
-        <div class="box-title-row">
-          <div class="box-title">
-            <span>✉️ Bản Nháp Email Phản Hồi Khách Hàng</span>
-          </div>
-          <button class="btn-secondary-action" onclick="copyDraftEmail()">
-            <span>📋 Sao chép Email</span>
-          </button>
-        </div>
-        <div class="email-preview-card" id="detDraftEmail">
-          <!-- Draft email text -->
-        </div>
-      </div>
-
-      <!-- Approval Ticket (Human Checkpoint 2) -->
-      <div class="artifact-box" id="approvalTicketBox" style="display: none;">
-        <div class="approval-ticket-card">
-          <div class="ticket-header">
-            <span class="ticket-title">📑 PHIẾU CHUYỂN DUYỆT CƠ HỘI VƯỢT THẨM QUYỀN (HUMAN CHECKPOINT 2)</span>
-            <span class="status-badge badge-pending">Cần Trưởng Phòng Quyết Định</span>
-          </div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 12px;">
-            <div>
-              <p style="font-size: 13px;"><b>Người trình duyệt:</b> <span id="ticketSalesRep">Lê Hoàng Long</span></p>
-              <p style="font-size: 13px;"><b>Người phê duyệt:</b> <span id="ticketManager">Lê Văn Tuấn (Trưởng phòng Kinh doanh B2B)</span></p>
-            </div>
-            <div>
-              <p style="font-size: 13px;"><b>Lý do vượt hạn mức:</b> <span id="ticketReason" style="color: #7c3aed; font-weight: 600;">Chiết khấu 10% &gt; 5%</span></p>
-              <p style="font-size: 13px;"><b>Căn cứ dữ liệu:</b> <span id="ticketEvidence">Kho đủ tồn 30 chiếc Router Cisco, thanh toán ngay 100%.</span></p>
-            </div>
-          </div>
-
-          <div class="approval-btn-group">
-            <button class="btn-approve" onclick="handleManagerApproval('APPROVED')">
-              <span>✓ Phê Duyệt Chiết Khấu</span>
-            </button>
-            <button class="btn-reject" onclick="handleManagerApproval('REJECTED')">
-              <span>✕ Từ Chối Yêu Cầu</span>
-            </button>
-            <span style="font-size: 12px; color: #64748b; margin-left: 10px;">
-              *AI Agent chỉ ghi nhận quyết định, con người giữ quyền quyết định cuối cùng.
-            </span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ====================================================================
-         TAB 4: NHẬT KÝ THỰC THI (AUDIT LOG)
-         ==================================================================== -->
-    <section id="tab-audit" class="tab-content" style="display: none;">
-      <div class="content-box">
-        <div class="box-title-row">
-          <div class="box-title">
-            <span>🛡️ Nhật Ký Truy Vết Xuyên Suốt (Audit Trail)</span>
-          </div>
-          <span style="font-size: 12px; color: #64748b;">Minh bạch 100% · Không thể chỉnh sửa trái phép</span>
-        </div>
-
-        <div style="overflow-x: auto;">
-          <table class="custom-table">
-            <thead>
-              <tr>
-                <th>Thời Gian</th>
-                <th>Mã Cơ Hội</th>
-                <th>Bước Quy Trình</th>
-                <th>Agent / Kỹ Năng</th>
-                <th>Thao Tác Thực Thi</th>
-                <th>Quy Tắc Áp Dụng</th>
-                <th>Con Người Can Thiệp</th>
-              </tr>
-            </thead>
-            <tbody id="auditTableBody">
-              <!-- Audit logs injected here -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- ====================================================================
-         TAB 5: FLOWCHART TỔNG THỂ & BÁO CÁO ĐỀ ÁN (TASK 1 & TASK 2)
-         ==================================================================== -->
-    <section id="tab-docs" class="tab-content" style="display: none;">
-      <!-- Interactive Flowchart Diagram Section -->
-      <div class="doc-section">
-        <h2>
-          <span>🗺️</span> QUY TRÌNH AI AGENT XỬ LÝ CƠ HỘI BÁN HÀNG B2B - MINH AN COMPANY
-        </h2>
-
-        <!-- Flowchart Colors Legend (Per Phần IV) -->
-        <div class="flowchart-legend">
-          <div class="legend-item">
-            <span class="legend-color-box" style="background: #22c55e;"></span>
-            <span>Hình Oval Xanh Lá: Bắt đầu</span>
-          </div>
-          <div class="legend-item">
-            <span class="legend-color-box" style="background: #93c5fd;"></span>
-            <span>Chữ Nhật Xanh Dương: Công việc</span>
-          </div>
-          <div class="legend-item">
-            <span class="legend-color-box" style="background: #fb923c;"></span>
-            <span>Hình Thoi Cam: Quyết định</span>
-          </div>
-          <div class="legend-item">
-            <span class="legend-color-box" style="background: #a855f7;"></span>
-            <span>Chữ Nhật Viền Tím: Hoạt động AI Agent</span>
-          </div>
-          <div class="legend-item">
-            <span class="legend-color-box" style="background: #fde047;"></span>
-            <span>Chữ Nhật Vàng Nhạt: Con người</span>
-          </div>
-          <div class="legend-item">
-            <span class="legend-color-box" style="background: #f87171;"></span>
-            <span>Hình Oval Đỏ Nhạt: Kết thúc</span>
-          </div>
-        </div>
-
-        <!-- SVG Visual Diagram -->
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; text-align: center; overflow-x: auto;">
-          <svg width="860" height="720" viewBox="0 0 860 720" style="margin: 0 auto; display: block;">
-            <defs>
-              <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6"/>
-              </marker>
-            </defs>
-
-            <!-- 1. Start -->
-            <ellipse cx="430" cy="35" rx="140" ry="22" fill="#22c55e" stroke="#15803d" stroke-width="2"/>
-            <text x="430" y="40" fill="#fff" font-size="12" font-weight="bold" text-anchor="middle">1. Bắt đầu: Tiếp nhận yêu cầu B2B</text>
-
-            <line x1="430" y1="57" x2="430" y2="85" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow)"/>
-
-            <!-- 2. AI Parsing -->
-            <rect x="290" y="85" width="280" height="40" rx="8" fill="#f5f3ff" stroke="#a855f7" stroke-width="2.5"/>
-            <text x="430" y="102" fill="#581c87" font-size="12" font-weight="bold" text-anchor="middle">2. AI Agent: Trích xuất & Phân loại thông tin</text>
-            <text x="430" y="117" fill="#6b21a8" font-size="10" text-anchor="middle">(Skill 1: Customer Request Analyzer)</text>
-
-            <line x1="430" y1="125" x2="430" y2="155" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow)"/>
-
-            <!-- 3. Decision 1 -->
-            <polygon points="430,155 550,195 430,235 310,195" fill="#fed7aa" stroke="#fb923c" stroke-width="2"/>
-            <text x="430" y="195" fill="#7c2d12" font-size="11" font-weight="bold" text-anchor="middle">Quyết định 1: Đủ thông tin?</text>
-
-            <!-- Branch: KHÔNG (Left) -->
-            <line x1="310" y1="195" x2="160" y2="195" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow)"/>
-            <text x="235" y="185" fill="#dc2626" font-size="11" font-weight="bold" text-anchor="middle">KHÔNG</text>
-
-            <rect x="50" y="175" width="200" height="44" rx="8" fill="#fef08a" stroke="#ca8a04" stroke-width="2"/>
-            <text x="150" y="193" fill="#713f12" font-size="10.5" font-weight="bold" text-anchor="middle">Human Checkpoint 1: Sales</text>
-            <text x="150" y="208" fill="#854d0e" font-size="9.5" text-anchor="middle">Gửi câu hỏi làm rõ khách hàng</text>
-
-            <!-- Loop back line from Checkpoint 1 -->
-            <path d="M 150 175 L 150 105 L 290 105" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrow)"/>
-            <text x="160" y="95" fill="#3b82f6" font-size="9">Cập nhật hồ sơ</text>
-
-            <!-- Branch: CÓ (Down) -->
-            <line x1="430" y1="235" x2="430" y2="265" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow)"/>
-            <text x="445" y="252" fill="#16a34a" font-size="11" font-weight="bold">CÓ</text>
-
-            <!-- 4. Tạo hồ sơ & Gán Sales -->
-            <rect x="290" y="265" width="280" height="38" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
-            <text x="430" y="288" fill="#1e3a8a" font-size="11.5" font-weight="bold" text-anchor="middle">4. Tạo mã cơ hội & Gán Sales phụ trách</text>
-
-            <line x1="430" y1="303" x2="430" y2="330" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow)"/>
-
-            <!-- 5. Thẩm định Tồn kho & Giá -->
-            <rect x="270" y="330" width="320" height="42" rx="8" fill="#f5f3ff" stroke="#a855f7" stroke-width="2.5"/>
-            <text x="430" y="348" fill="#581c87" font-size="11.5" font-weight="bold" text-anchor="middle">5. AI Agent: Thẩm định Danh mục, Tồn kho & Giá</text>
-            <text x="430" y="363" fill="#6b21a8" font-size="10" text-anchor="middle">(Skill 2: Product & Inventory Validator)</text>
-
-            <line x1="430" y1="372" x2="430" y2="400" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow)"/>
-
-            <!-- 6. Tính giá & Chiết khấu -->
-            <rect x="270" y="400" width="320" height="42" rx="8" fill="#f5f3ff" stroke="#a855f7" stroke-width="2.5"/>
-            <text x="430" y="418" fill="#581c87" font-size="11.5" font-weight="bold" text-anchor="middle">6. AI Agent: Tính giá & Kiểm tra thẩm quyền chiết khấu</text>
-            <text x="430" y="433" fill="#6b21a8" font-size="10" text-anchor="middle">(Skill 3: Pricing & Discount Calculator)</text>
-
-            <line x1="430" y1="442" x2="430" y2="475" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow)"/>
-
-            <!-- 7. Decision 2 -->
-            <polygon points="430,475 560,515 430,555 300,515" fill="#fed7aa" stroke="#fb923c" stroke-width="2"/>
-            <text x="430" y="515" fill="#7c2d12" font-size="11" font-weight="bold" text-anchor="middle">Quyết định 2: Đủ điều kiện / Vượt quyền?</text>
-
-            <!-- Branch: Vượt thẩm quyền (Right) -->
-            <line x1="560" y1="515" x2="680" y2="515" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow)"/>
-            <text x="615" y="505" fill="#7c3aed" font-size="10.5" font-weight="bold" text-anchor="middle">VƯỢT QUYỀN</text>
-
-            <rect x="680" y="490" width="160" height="50" rx="8" fill="#fef08a" stroke="#ca8a04" stroke-width="2"/>
-            <text x="760" y="510" fill="#713f12" font-size="10" font-weight="bold" text-anchor="middle">Human Checkpoint 2</text>
-            <text x="760" y="525" fill="#854d0e" font-size="9" text-anchor="middle">Trưởng phòng phê duyệt</text>
-
-            <!-- Line from approval back to finish -->
-            <path d="M 760 540 L 760 625 L 570 625" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow)"/>
-
-            <!-- Branch: Đủ điều kiện (Down) -->
-            <line x1="430" y1="555" x2="430" y2="600" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow)"/>
-            <text x="445" y="580" fill="#16a34a" font-size="11" font-weight="bold">HỢP LỆ</text>
-
-            <!-- 9. Hoàn thiện hồ sơ & Bản nháp -->
-            <rect x="290" y="600" width="280" height="42" rx="8" fill="#f5f3ff" stroke="#a855f7" stroke-width="2.5"/>
-            <text x="430" y="618" fill="#581c87" font-size="11.5" font-weight="bold" text-anchor="middle">9. AI Agent: Hoàn thiện hồ sơ & Dự thảo email</text>
-            <text x="430" y="633" fill="#6b21a8" font-size="10" text-anchor="middle">(Skill 4: Opportunity & Response Generator)</text>
-
-            <line x1="430" y1="642" x2="430" y2="675" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow)"/>
-
-            <!-- 10. End -->
-            <ellipse cx="430" cy="695" rx="140" ry="20" fill="#f87171" stroke="#dc2626" stroke-width="2"/>
-            <text x="430" y="700" fill="#fff" font-size="11.5" font-weight="bold" text-anchor="middle">10. Kết thúc: Bàn giao Quản lý & Dashboard</text>
-          </svg>
-        </div>
-      </div>
-
-      <!-- Task 1 & Task 2 Formal Documentation Body -->
-      <div class="doc-section">
-        <h2><span>📖</span> BÁO CÁO THIẾT KẾ ĐỀ ÁN: MINH AN B2B AI AGENT (TASK 1 & TASK 2)</h2>
-
-        <h3>1. Giới thiệu dự án và mục tiêu</h3>
-        <p>
-          Công ty Minh An là doanh nghiệp chuyên cung cấp thiết bị và dịch vụ công nghệ cho khách hàng B2B. Đội ngũ gồm 6 nhân viên kinh doanh tiếp nhận trung bình 180 yêu cầu/tuần qua Email và Biểu mẫu. Mục tiêu của hệ thống là tự động hóa các bước xử lý cơ hội bán hàng, ngăn chặn việc bỏ sót thông tin, kiểm tra tính khả dụng của tồn kho và đảm bảo tuân thủ nghiêm ngặt chính sách chiết khấu.
-        </p>
-
-        <h3>2. Phân tích quy trình hiện tại (AS-IS) và 3 Vấn đề cốt lõi</h3>
-        <table class="custom-table" style="margin-top: 10px;">
-          <thead>
-            <tr>
-              <th>Vấn đề nghiệp vụ</th>
-              <th>Nguyên nhân gốc rễ</th>
-              <th>Ảnh hưởng đến vận hành &amp; kinh doanh</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><b>1. Bỏ sót hạng mục &amp; tính sai giá</b></td>
-              <td>Nhân viên tra cứu bảng giá thủ công (file Excel cũ), bỏ sót model phụ hoặc phụ kiện trong email dài của khách.</td>
-              <td>Báo giá sai lệch từ 5% - 12%, gây thâm hụt biên lợi nhuận hoặc mất uy tín thương hiệu khi phải đính chính giá.</td>
-            </tr>
-            <tr>
-              <td><b>2. Cam kết tiến độ sai lệch tồn kho</b></td>
-              <td>Kinh doanh không xác nhận tồn khả dụng với Vận hành, tự hứa giao hàng trong 3 ngày trong khi kho chỉ đủ 20%.</td>
-              <td>Phạt chậm tiến độ hợp đồng, khách hàng hủy đơn hàng, đứt gãy mối quan hệ đối tác chiến lược.</td>
-            </tr>
-            <tr>
-              <td><b>3. Tắc nghẽn phê duyệt chiết khấu</b></td>
-              <td>Hồ sơ thiếu ngân sách hoặc thiếu thông tin người duyệt phía khách khiến yêu cầu chuyển qua lại giữa Sales và Trưởng phòng.</td>
-              <td>Thời gian phản hồi kéo dài từ 24h lên 72h, khách hàng chuyển sang đối thủ cạnh tranh có tốc độ phản hồi nhanh hơn.</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <h3>3. Bảng phân công trách nhiệm (RACI) giữa AI Agent và Con Người</h3>
-        <table class="custom-table" style="margin-top: 10px;">
-          <thead>
-            <tr>
-              <th>Bước Nghiệp Vụ</th>
-              <th>AI Agent Đảm Nhiệm</th>
-              <th>Con Người (Sales / Trưởng Phòng)</th>
-              <th>Nguyên Tắc Bắt Buộc</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><b>1. Tiếp nhận &amp; Trích xuất</b></td>
-              <td>Đọc hiểu NLP, bóc tách thực thể (Customer, SKU, SL, Ngân sách, Hạn giao, CK).</td>
-              <td>Giám sát, xử lý trường hợp định dạng email đặc biệt.</td>
-              <td>AI không tự bịa thông tin khi thiếu.</td>
-            </tr>
-            <tr>
-              <td><b>2. Kiểm tra tính đầy đủ</b></td>
-              <td>Phát hiện trường thiếu, tự sinh bộ câu hỏi và dự thảo email làm rõ.</td>
-              <td><b>Human Checkpoint 1:</b> Sales rà soát bản nháp trước khi bấm gửi khách hàng.</td>
-              <td>Không tạo cơ hội trùng lặp khi nhận bổ sung.</td>
-            </tr>
-            <tr>
-              <td><b>3. Thẩm định kho &amp; Tính giá</b></td>
-              <td>Gọi công cụ đối chiếu Master Catalog, tồn kho thực tế, tính toán chiết khấu theo công thức.</td>
-              <td>Bộ phận Vận hành xác nhận đơn hàng cần điều chuyển kho liên tỉnh.</td>
-              <td>Bắt buộc có dữ liệu nguồn và phiên bản bảng giá hiện hành.</td>
-            </tr>
-            <tr>
-              <td><b>4. Phê duyệt vượt thẩm quyền</b></td>
-              <td>Tự động lập Phiếu chuyển duyệt kèm căn cứ số liệu minh bạch khi CK &gt; 5% hoặc HĐ &ge; 500M.</td>
-              <td><b>Human Checkpoint 2:</b> Trưởng phòng Kinh doanh xem xét và bấm Phê duyệt / Từ chối.</td>
-              <td><b>AI tuyệt đối không tự phê duyệt vượt quyền.</b></td>
-            </tr>
-            <tr>
-              <td><b>5. Phản hồi khách hàng</b></td>
-              <td>Soạn bản nháp email theo đúng trạng thái thực tế.</td>
-              <td>Sales ký duyệt và gửi báo giá chính thức.</td>
-              <td>Không biến thông tin chưa xác minh thành cam kết bán hàng.</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <h3>4. Thiết kế 4 Kỹ năng nghiệp vụ (Skills) của Hệ thống</h3>
-        <ul>
-          <li><b>Skill 1 - Customer Request Analyzer:</b> Đọc dữ liệu phi cấu trúc, bóc tách khách hàng, liên hệ, SKU, số lượng, ngân sách, thời hạn, chiết khấu và chuẩn hóa thành JSON cấu trúc.</li>
-          <li><b>Skill 2 - Product &amp; Inventory Validator:</b> Đối chiếu Master Catalog, kiểm tra mã sản phẩm, so sánh số lượng với tồn kho khả dụng, tính toán tính khả thi của thời gian giao hàng.</li>
-          <li><b>Skill 3 - Pricing &amp; Discount Calculator:</b> Tra cứu bảng giá niêm yết, tính tổng giá trị trước chiết khấu, áp dụng tỷ lệ chiết khấu, đối chiếu hạn mức ủy quyền (Sales &le; 5%, Trưởng phòng &le; 15%).</li>
-          <li><b>Skill 4 - Opportunity &amp; Response Generator:</b> Tổng hợp hồ sơ cơ hội, phân loại vào 1 trong 4 trạng thái, soạn thảo dự thảo email phản hồi khách hàng và lập Phiếu chuyển duyệt.</li>
-        </ul>
-      </div>
-    </section>
-
+      </footer>
+    </div>
   </div>
 
-  <script src="/app.js"></script>
+  <!-- ====================================================================
+       2. PUBLIC AREA: LOGIN PAGE (DEDICATED VIEW)
+       ==================================================================== -->
+  <div id="publicLoginView">
+    <div class="login-modal-box">
+      <div class="login-header-center">
+        <div class="login-brand-logo">MA</div>
+        <h2 class="login-title">Welcome to Minh An AI Agent</h2>
+        <p class="login-subtitle">Đăng nhập để truy cập hệ thống quản lý cơ hội bán hàng B2B</p>
+      </div>
+
+      <div id="loginErrorAlert" style="display:none; background:#fee2e2; border:1px solid #f87171; color:#b91c1c; padding:10px; border-radius:10px; font-size:12.5px; margin-bottom:14px;">
+        <!-- Error text -->
+      </div>
+
+      <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+        <div class="form-group">
+          <label class="form-label">Email hoặc Tên đăng nhập</label>
+          <div class="form-input-wrap">
+            <input type="text" id="loginEmail" class="form-input" placeholder="yennhu@minhan.com.vn" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Mật khẩu</label>
+          <div class="form-input-wrap">
+            <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
+            <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility()">👁️</button>
+          </div>
+        </div>
+
+        <div class="login-extra-row">
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+            <input type="checkbox" id="rememberMeCheckbox" checked>
+            <span>Ghi nhớ đăng nhập</span>
+          </label>
+          <a href="javascript:void(0)" onclick="navigateTo('landing')" style="color:#b45309; text-decoration:none; font-weight:600;">&larr; Về trang chủ</a>
+        </div>
+
+        <button type="submit" class="btn-submit-login">
+          <span>ĐĂNG NHẬP HỆ THỐNG</span>
+        </button>
+      </form>
+
+      <!-- Quick 1-Click Demo Accounts -->
+      <div class="demo-accounts-pill-box">
+        <div class="demo-acc-title">⚡ Chọn nhanh tài khoản Demo:</div>
+        <div class="demo-pills-list">
+          <button class="demo-pill-btn" onclick="fillDemoAccount('admin@minhan.com.vn', '123456')">
+            <span>👤 <b>Lê Yến Như</b> (Quản trị viên)</span>
+            <span style="color:#b45309;">Chọn &rarr;</span>
+          </button>
+          <button class="demo-pill-btn" onclick="fillDemoAccount('tuan.le@minhan.com.vn', '123456')">
+            <span>👔 <b>Lê Văn Tuấn</b> (Trưởng phòng KD)</span>
+            <span style="color:#b45309;">Chọn &rarr;</span>
+          </button>
+          <button class="demo-pill-btn" onclick="fillDemoAccount('an.nguyen@minhan.com.vn', '123456')">
+            <span>💼 <b>Nguyễn Văn An</b> (Chuyên viên Sales)</span>
+            <span style="color:#b45309;">Chọn &rarr;</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       3. PRIVATE AREA: ENTERPRISE SAAS SYSTEM (SAU KHI ĐĂNG NHẬP)
+       ==================================================================== -->
+  <div id="privateAppView">
+    <div class="saas-layout">
+      <!-- Fixed Left Sidebar -->
+      <aside class="saas-sidebar">
+        <div class="sidebar-header">
+          <div class="brand-icon-box" style="width:34px; height:34px; font-size:14px;">MA</div>
+          <div>
+            <div class="sidebar-brand-name">MINH AN</div>
+            <div class="sidebar-brand-sub">AI AGENT B2B</div>
+          </div>
+        </div>
+
+        <ul class="sidebar-menu">
+          <li class="menu-section-label">Nghiệp vụ cốt lõi</li>
+          <li>
+            <a class="menu-link active" data-page="page-dashboard" onclick="openSaasPage('page-dashboard')">
+              <span class="menu-icon">📊</span>
+              <span class="menu-label">1. Tổng quan (Dashboard)</span>
+            </a>
+          </li>
+          <li>
+            <a class="menu-link" data-page="page-ingestion" onclick="openSaasPage('page-ingestion')">
+              <span class="menu-icon">📥</span>
+              <span class="menu-label">2. Tiếp nhận yêu cầu</span>
+            </a>
+          </li>
+          <li>
+            <a class="menu-link" data-page="page-parsing" onclick="openSaasPage('page-parsing')">
+              <span class="menu-icon">🤖</span>
+              <span class="menu-label">3. Phân tích yêu cầu AI</span>
+            </a>
+          </li>
+          <li>
+            <a class="menu-link" data-page="page-opportunities" onclick="openSaasPage('page-opportunities')">
+              <span class="menu-icon">📋</span>
+              <span class="menu-label">4. Quản lý cơ hội</span>
+              <span class="menu-badge" id="sidebarOppCount">4</span>
+            </a>
+          </li>
+          <li>
+            <a class="menu-link" data-page="page-validation" onclick="openSaasPage('page-validation')">
+              <span class="menu-icon">📦</span>
+              <span class="menu-label">5. Thẩm định kho & giá</span>
+            </a>
+          </li>
+          <li>
+            <a class="menu-link" data-page="page-pricing" onclick="openSaasPage('page-pricing')">
+              <span class="menu-icon">💰</span>
+              <span class="menu-label">6. Báo giá & Chiết khấu</span>
+            </a>
+          </li>
+          <li>
+            <a class="menu-link" data-page="page-approval" onclick="openSaasPage('page-approval')">
+              <span class="menu-icon">📑</span>
+              <span class="menu-label">7. Phê duyệt</span>
+              <span class="menu-badge" style="background:#8b5cf6; color:#fff;" id="sidebarPendingCount">1</span>
+            </a>
+          </li>
+
+          <li class="menu-section-label">Báo cáo & Giám sát</li>
+          <li>
+            <a class="menu-link" data-page="page-reports" onclick="openSaasPage('page-reports')">
+              <span class="menu-icon">📈</span>
+              <span class="menu-label">8. Báo cáo & Thống kê</span>
+            </a>
+          </li>
+          <li>
+            <a class="menu-link" data-page="page-audit" onclick="openSaasPage('page-audit')">
+              <span class="menu-icon">🛡️</span>
+              <span class="menu-label">9. Nhật ký AI Agent</span>
+            </a>
+          </li>
+
+          <li class="menu-section-label">Hệ thống</li>
+          <li>
+            <a class="menu-link" data-page="page-data" onclick="openSaasPage('page-data')">
+              <span class="menu-icon">🗄️</span>
+              <span class="menu-label">10. Quản lý dữ liệu</span>
+            </a>
+          </li>
+          <li>
+            <a class="menu-link" data-page="page-settings" onclick="openSaasPage('page-settings')">
+              <span class="menu-icon">⚙️</span>
+              <span class="menu-label">11. Cài đặt & Phân quyền</span>
+            </a>
+          </li>
+        </ul>
+
+        <!-- Bottom User Footer -->
+        <div class="sidebar-user-footer">
+          <div class="user-info-meta">
+            <img src="/assets/avatar.png?v=2" class="user-sidebar-avatar" id="sidebarUserAvatar" alt="User">
+            <div class="user-info-text">
+              <div class="user-sidebar-name" id="sidebarUserName">Lê Yến Như</div>
+              <div class="user-sidebar-role" id="sidebarUserRole">Quản trị viên</div>
+            </div>
+          </div>
+          <button class="btn-sidebar-logout" onclick="handleLogout()" title="Đăng xuất">⏻</button>
+        </div>
+      </aside>
+
+      <!-- Main Content Wrapper -->
+      <div class="saas-main-wrapper">
+        <!-- Sticky Header Bar -->
+        <header class="saas-top-header">
+          <div class="header-breadcrumbs">
+            <span>Hệ thống</span> / <span class="breadcrumb-curr" id="breadcrumbCurrentPage">Tổng quan</span>
+          </div>
+
+          <div class="header-right-tools">
+            <div class="header-search-bar">
+              <span>🔍</span>
+              <input type="text" placeholder="Tìm kiếm cơ hội, khách hàng...">
+            </div>
+
+            <button class="header-icon-btn" onclick="openSaasPage('page-approval')" title="Thông báo duyệt">
+              <span>🔔</span>
+              <span class="badge-dot" id="headerNotifDot"></span>
+            </button>
+
+            <button class="btn-secondary-tool" onclick="exportWordReport()">
+              <span>📝 Xuất Word (.doc)</span>
+            </button>
+            <button class="btn-secondary-tool" onclick="exportCsvReport()">
+              <span>📊 Xuất Excel (.csv)</span>
+            </button>
+          </div>
+        </header>
+
+        <!-- Dynamic Page Container -->
+        <main class="saas-view-container">
+
+          <!-- -------------------------------------------------------------
+               PAGE 3: DASHBOARD - TỔNG QUAN
+               ------------------------------------------------------------- -->
+          <div id="page-dashboard" class="saas-page active">
+            <div class="page-top-bar">
+              <div>
+                <h1 class="page-main-title">Tổng Quan Tình Hình Xử Lý Cơ Hội B2B</h1>
+                <p class="page-main-sub">Theo dõi thời gian thực 4 trạng thái nghiệp vụ và tiến độ AI Agent</p>
+              </div>
+              <button class="btn-primary-action" onclick="openSaasPage('page-ingestion')">
+                <span>➕ Tạo yêu cầu mới</span>
+              </button>
+            </div>
+
+            <!-- 4 Metric Cards -->
+            <div class="saas-stats-grid">
+              <div class="stat-metric-card color-eligible">
+                <div class="stat-top-row">
+                  <span class="stat-card-label">CÓ THỂ TIẾP TỤC</span>
+                  <span>✓</span>
+                </div>
+                <div class="stat-card-val" id="dashCountEligible">1</div>
+                <div class="stat-card-money" id="dashValEligible">197,760,000 đ</div>
+              </div>
+
+              <div class="stat-metric-card color-pending">
+                <div class="stat-top-row">
+                  <span class="stat-card-label">CHỜ TRƯỞNG PHÒNG DUYỆT</span>
+                  <span>⏳</span>
+                </div>
+                <div class="stat-card-val" id="dashCountPending">1</div>
+                <div class="stat-card-money" style="color:#7c3aed;" id="dashValPending">661,500,000 đ</div>
+              </div>
+
+              <div class="stat-metric-card color-missing">
+                <div class="stat-top-row">
+                  <span class="stat-card-label">CẦN BỔ SUNG THÔNG TIN</span>
+                  <span>⚠️</span>
+                </div>
+                <div class="stat-card-val" id="dashCountMissing">1</div>
+                <div class="stat-card-money" style="color:#94a3b8; font-style:italic;">Chưa xác định</div>
+              </div>
+
+              <div class="stat-metric-card color-unfulfilled">
+                <div class="stat-top-row">
+                  <span class="stat-card-label">CHƯA ĐÁP ỨNG</span>
+                  <span>✕</span>
+                </div>
+                <div class="stat-card-val" id="dashCountUnfulfilled">1</div>
+                <div class="stat-card-money" style="color:#94a3b8; font-style:italic;">Chưa xác định</div>
+              </div>
+            </div>
+
+            <!-- Charts & List Grid -->
+            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:24px;">
+              <div class="saas-card">
+                <div class="saas-card-title-row">
+                  <div class="saas-card-title">
+                    <span>📋 Cơ Hội Bán Hàng Cần Xử Lý</span>
+                  </div>
+                  <button class="btn-secondary-tool" onclick="openSaasPage('page-opportunities')">Xem tất cả &rarr;</button>
+                </div>
+                <table class="saas-table">
+                  <thead>
+                    <tr>
+                      <th>Mã</th>
+                      <th>Khách Hàng</th>
+                      <th>Trạng Thái</th>
+                      <th>Giá Trị</th>
+                      <th>Sales</th>
+                      <th>Thao Tác</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashTableBody">
+                    <!-- Dynamic Rows -->
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="saas-card">
+                <div class="saas-card-title-row">
+                  <div class="saas-card-title">
+                    <span>📈 Phân Bổ Trạng Thái</span>
+                  </div>
+                </div>
+                <div style="height:240px; position:relative;">
+                  <canvas id="saasStatusChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- -------------------------------------------------------------
+               PAGE 4: TIẾP NHẬN YÊU CẦU
+               ------------------------------------------------------------- -->
+          <div id="page-ingestion" class="saas-page">
+            <div class="page-top-bar">
+              <div>
+                <h1 class="page-main-title">Tiếp Nhận Yêu Cầu Khách Hàng</h1>
+                <p class="page-main-sub">Nhập nội dung từ Email, Biểu mẫu hoặc nạp file (.xlsx, .csv, .txt)</p>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 360px 1fr; gap:24px;">
+              <div class="saas-card">
+                <div class="saas-card-title-row">
+                  <div class="saas-card-title">🧪 Kịch Bản Mẫu Có Sẵn</div>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                  <button class="demo-pill-btn" onclick="loadTestCaseToForm(1)">
+                    <span><b>TC1:</b> DigiTech (10 Laptop, Đủ điều kiện)</span>
+                  </button>
+                  <button class="demo-pill-btn" onclick="loadTestCaseToForm(2)">
+                    <span><b>TC2:</b> An Khang Pharma (Thiếu dữ liệu)</span>
+                  </button>
+                  <button class="demo-pill-btn" onclick="loadTestCaseToForm(3)">
+                    <span><b>TC3:</b> Global Telecom (CK 10%, Chờ duyệt)</span>
+                  </button>
+                  <button class="demo-pill-btn" onclick="loadTestCaseToForm(4)">
+                    <span><b>TC4:</b> Grand Plaza (Hết hàng, Chưa đáp ứng)</span>
+                  </button>
+                </div>
+
+                <div style="margin-top:20px; padding:14px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:12px; text-align:center;">
+                  <div style="font-size:24px;">📁</div>
+                  <div style="font-size:12.5px; font-weight:700; color:#334155; margin-top:4px;">Kéo thả file yêu cầu hoặc</div>
+                  <input type="file" id="fileUploadInput" onchange="handleFileUploadSim(event)" style="margin-top:8px; font-size:11px;">
+                </div>
+              </div>
+
+              <div class="saas-card">
+                <div class="saas-card-title-row">
+                  <div class="saas-card-title">📝 Nội Dung Yêu Cầu Gốc</div>
+                </div>
+                <textarea id="pageIngestTextarea" class="form-input" style="height:220px; font-size:13.5px; line-height:1.6;" placeholder="Dán nội dung email hoặc yêu cầu khách hàng vào đây..."></textarea>
+                
+                <div style="margin-top:16px; display:flex; justify-content:flex-end;">
+                  <button class="btn-primary-action" onclick="runIngestToParsing()">
+                    <span>⚡ PHÂN TÍCH BẰNG AI AGENT &rarr;</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- -------------------------------------------------------------
+               PAGE 5: PHÂN TÍCH YÊU CẦU AI (2-COLUMN SPLIT VIEW)
+               ------------------------------------------------------------- -->
+          <div id="page-parsing" class="saas-page">
+            <div class="page-top-bar">
+              <div>
+                <h1 class="page-main-title">Phân Tích Yêu Cầu AI (Skill 1: Request Analyzer)</h1>
+                <p class="page-main-sub">Đối chiếu dữ liệu gốc và thực thể bóc tách có cấu trúc</p>
+              </div>
+              <div style="display:flex; gap:10px;">
+                <button class="btn-secondary-tool" onclick="openSaasPage('page-validation')">Thẩm định tồn kho &rarr;</button>
+                <button class="btn-primary-action" onclick="openSaasPage('page-opportunities')">Tạo hồ sơ cơ hội</button>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
+              <div class="saas-card">
+                <div class="saas-card-title-row">
+                  <div class="saas-card-title">📄 Nội Dung Yêu Cầu Gốc</div>
+                </div>
+                <div id="parsingRawContent" style="background:#f8fafc; padding:16px; border-radius:12px; font-size:13px; line-height:1.6; white-space:pre-wrap; border:1px solid #e2e8f0; height:340px; overflow-y:auto;">
+                  <!-- Raw text injected -->
+                </div>
+              </div>
+
+              <div class="saas-card">
+                <div class="saas-card-title-row">
+                  <div class="saas-card-title">🤖 Kết Quả Bóc Tách Thực Thể (Structured JSON)</div>
+                  <span class="badge-tag eligible" id="parsingStatusPill">Chuẩn hóa 100%</span>
+                </div>
+                <div id="parsingResultBox" style="background:#fffdf0; padding:16px; border-radius:12px; font-size:12.5px; line-height:1.7; border:1px solid #fde68a; height:340px; overflow-y:auto;">
+                  <!-- Structured fields -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- -------------------------------------------------------------
+               PAGE 6: QUẢN LÝ CƠ HỘI BÁN HÀNG
+               ------------------------------------------------------------- -->
+          <div id="page-opportunities" class="saas-page">
+            <div class="page-top-bar">
+              <div>
+                <h1 class="page-main-title">Quản Lý Toàn Bộ Cơ Hội Bán Hàng B2B</h1>
+                <p class="page-main-sub">Danh sách chi tiết, bộ lọc đa chiều và thao tác xem hồ sơ</p>
+              </div>
+              <div style="display:flex; gap:10px;">
+                <select id="oppStatusFilter" class="form-input" style="width:180px; padding:6px 10px;" onchange="filterOpportunitiesTable()">
+                  <option value="ALL">Tất cả trạng thái</option>
+                  <option value="Có thể tiếp tục">Có thể tiếp tục</option>
+                  <option value="Chờ duyệt">Chờ duyệt</option>
+                  <option value="Cần bổ sung thông tin">Cần bổ sung thông tin</option>
+                  <option value="Chưa đáp ứng">Chưa đáp ứng</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="saas-card">
+              <table class="saas-table">
+                <thead>
+                  <tr>
+                    <th>Mã Cơ Hội</th>
+                    <th>Khách Hàng</th>
+                    <th>Người Liên Hệ</th>
+                    <th>Ngày Tiếp Nhận</th>
+                    <th>Tổng Giá Trị</th>
+                    <th>Sales Phụ Trách</th>
+                    <th>Trạng Thái</th>
+                    <th>Hành Động</th>
+                  </tr>
+                </thead>
+                <tbody id="allOppsTableBody">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Opportunity Detail Modal / Box -->
+            <div class="saas-card" id="oppDetailViewerBox" style="display:none; border-top:3px solid #f59e0b;">
+              <div class="saas-card-title-row">
+                <div class="saas-card-title">
+                  <span>📑 Chi Tiết Hồ Sơ Cơ Hội: <b id="detailViewerId">OPP-2026-001</b></span>
+                </div>
+                <button class="btn-secondary-tool" onclick="document.getElementById('oppDetailViewerBox').style.display='none'">Đóng ✕</button>
+              </div>
+
+              <div id="detailViewerContent">
+                <!-- Injected full detail -->
+              </div>
+            </div>
+          </div>
+
+          <!-- -------------------------------------------------------------
+               PAGE 7: THẨM ĐỊNH SẢN PHẨM VÀ TỒN KHO
+               ------------------------------------------------------------- -->
+          <div id="page-validation" class="saas-page">
+            <div class="page-top-bar">
+              <div>
+                <h1 class="page-main-title">Thẩm Định Danh Mục Sản Phẩm & Tồn Kho (Skill 2)</h1>
+                <p class="page-main-sub">Đối chiếu dữ liệu thời gian thực với Master Catalog Minh An Company</p>
+              </div>
+              <button class="btn-primary-action" onclick="runLiveInventoryValidation()">
+                <span>🔍 Chạy thẩm định AI</span>
+              </button>
+            </div>
+
+            <div class="saas-card">
+              <div class="saas-card-title-row">
+                <div class="saas-card-title">📦 Master Catalog & Năng Lực Đáp Ứng Thực Tế</div>
+              </div>
+              <table class="saas-table">
+                <thead>
+                  <tr>
+                    <th>Mã SKU</th>
+                    <th>Tên Sản Phẩm</th>
+                    <th>Danh Mục</th>
+                    <th>Đơn Giá Niêm Yết</th>
+                    <th>Tồn Khả Dụng</th>
+                    <th>Lead-time Tiêu Chuẩn</th>
+                    <th>Lead-time Hỏa Tốc</th>
+                    <th>Bảo Hành</th>
+                  </tr>
+                </thead>
+                <tbody id="catalogTableBody">
+                  <!-- Injected from catalog -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- -------------------------------------------------------------
+               PAGE 8: BÁO GIÁ VÀ CHIẾT KHẤU
+               ------------------------------------------------------------- -->
+          <div id="page-pricing" class="saas-page">
+            <div class="page-top-bar">
+              <div>
+                <h1 class="page-main-title">Báo Giá & Ma Trận Phê Duyệt Chiết Khấu (Skill 3)</h1>
+                <p class="page-main-sub">Tính toán có kiểm soát số liệu, không để LLM tự ước lượng</p>
+              </div>
+              <button class="btn-primary-action" onclick="alert('Đã tính toán và kiểm tra lại toàn bộ công thức!')">
+                <span>🧮 Tính toán bằng AI Agent</span>
+              </button>
+            </div>
+
+            <div class="saas-card">
+              <div class="saas-card-title-row">
+                <div class="saas-card-title">⚖️ Ma Trận Thẩm Quyền Phê Duyệt Chiết Khấu</div>
+              </div>
+              <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:16px;">
+                <div style="padding:16px; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:12px;">
+                  <div style="font-size:12px; color:#065f46; font-weight:700;">HẠN MỨC CHUYÊN VIÊN SALES</div>
+                  <div style="font-size:22px; font-weight:800; color:#047857; margin-top:4px;">Chiết khấu &le; 5.0%</div>
+                  <div style="font-size:12px; color:#065f46; margin-top:6px;">Chuyên viên bán hàng được toàn quyền áp dụng và phát hành báo giá.</div>
+                </div>
+
+                <div style="padding:16px; background:#f5f3ff; border:1px solid #ddd6fe; border-radius:12px;">
+                  <div style="font-size:12px; color:#5b21b6; font-weight:700;">HẠN MỨC TRƯỞNG PHÒNG KD</div>
+                  <div style="font-size:22px; font-weight:800; color:#6d28d9; margin-top:4px;">Chiết khấu 5.1% - 15.0%</div>
+                  <div style="font-size:12px; color:#5b21b6; margin-top:6px;">Hoặc tổng giá trị hợp đồng &ge; 500,000,000 VNĐ bắt buộc lập Phiếu chuyển duyệt.</div>
+                </div>
+
+                <div style="padding:16px; background:#fff1f2; border:1px solid #fecdd3; border-radius:12px;">
+                  <div style="font-size:12px; color:#9f1239; font-weight:700;">HẠN MỨC BAN GIÁM ĐỐC</div>
+                  <div style="font-size:22px; font-weight:800; color:#be123c; margin-top:4px;">Chiết khấu &gt; 15.0%</div>
+                  <div style="font-size:12px; color:#9f1239; margin-top:6px;">Các trường hợp đặc quyền ngoại lệ hoặc điều khoản thanh toán chậm.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- -------------------------------------------------------------
+               PAGE 9: PHÊ DUYỆT (TRƯỞNG PHÒNG KINH DOANH)
+               ------------------------------------------------------------- -->
+          <div id="page-approval" class="saas-page">
+            <div class="page-top-bar">
+              <div>
+                <h1 class="page-main-title">Hộp Thư Phê Duyệt Của Trưởng Phòng Kinh Doanh</h1>
+                <p class="page-main-sub">Human Checkpoint 2: Xem xét các trường hợp vượt thẩm quyền</p>
+              </div>
+            </div>
+
+            <div id="approvalPendingContainer">
+              <!-- Pending tickets injected -->
+            </div>
+          </div>
+
+          <!-- -------------------------------------------------------------
+               PAGE 10: BÁO CÁO VÀ THỐNG KÊ
+               ------------------------------------------------------------- -->
+          <div id="page-reports" class="saas-page">
+            <div class="page-top-bar">
+              <div>
+                <h1 class="page-main-title">Báo Cáo & Thống Kê Tổng Hợp Cơ Hội</h1>
+                <p class="page-main-sub">Đảm bảo nguyên tắc tính riêng giá trị và xuất văn bản chuẩn doanh nghiệp</p>
+              </div>
+              <div style="display:flex; gap:10px;">
+                <button class="btn-primary-action" onclick="exportWordReport()">
+                  <span>📝 Xuất Báo Cáo Word (.doc)</span>
+                </button>
+                <button class="btn-secondary-tool" onclick="exportCsvReport()">
+                  <span>📊 Xuất Excel (.csv)</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="saas-card">
+              <div class="saas-card-title-row">
+                <div class="saas-card-title">📊 Bảng Tổng Hợp Chỉ Tiêu Pipeline Minh An Company</div>
+              </div>
+              <table class="saas-table">
+                <thead>
+                  <tr>
+                    <th>Chỉ Tiêu Trạng Thái</th>
+                    <th>Ý Nghĩa Nghiệp Vụ</th>
+                    <th>Số Lượng Cơ Hội</th>
+                    <th>Tỷ Lệ (%)</th>
+                    <th>Tổng Giá Trị Tính Toán</th>
+                  </tr>
+                </thead>
+                <tbody id="reportStatsTableBody">
+                  <!-- Rows injected -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- -------------------------------------------------------------
+               PAGE 11: NHẬT KÝ AI AGENT (AUDIT LOG)
+               ------------------------------------------------------------- -->
+          <div id="page-audit" class="saas-page">
+            <div class="page-top-bar">
+              <div>
+                <h1 class="page-main-title">Nhật Ký Thực Thi AI Agent (Audit Trail)</h1>
+                <p class="page-main-sub">Minh bạch 100% · Lưu vết toàn bộ tool call, quy tắc và can thiệp của con người</p>
+              </div>
+            </div>
+
+            <div class="saas-card">
+              <table class="saas-table">
+                <thead>
+                  <tr>
+                    <th>Thời Gian</th>
+                    <th>Mã Cơ Hội</th>
+                    <th>Bước Quy Trình</th>
+                    <th>Agent / Skill</th>
+                    <th>Thao Tác Thực Thi</th>
+                    <th>Quy Tắc Áp Dụng</th>
+                    <th>Con Người Can Thiệp</th>
+                  </tr>
+                </thead>
+                <tbody id="auditLogPageTbody">
+                  <!-- Audit logs -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- -------------------------------------------------------------
+               PAGE 12: QUẢN LÝ DỮ LIỆU
+               ------------------------------------------------------------- -->
+          <div id="page-data" class="saas-page">
+            <div class="page-top-bar">
+              <div>
+                <h1 class="page-main-title">Quản Lý & Nạp Bộ Dữ Liệu Mới</h1>
+                <p class="page-main-sub">Cho phép nạp bộ dữ liệu mới từ giảng viên mà không cần chỉnh sửa code hệ thống</p>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
+              <div class="saas-card">
+                <div class="saas-card-title-row">
+                  <div class="saas-card-title">📁 Các Tệp Dữ Liệu Hiện Hành</div>
+                </div>
+                <table class="saas-table">
+                  <thead>
+                    <tr>
+                      <th>Tên Bộ Dữ Liệu</th>
+                      <th>Loại</th>
+                      <th>Số Dòng</th>
+                      <th>Phiên Bản</th>
+                      <th>Trạng Thái</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><b>master_catalog.json</b></td>
+                      <td>Danh mục sản phẩm & tồn kho</td>
+                      <td>8 SKU</td>
+                      <td>v2026.1</td>
+                      <td><span class="badge-tag eligible">Hoạt động</span></td>
+                    </tr>
+                    <tr>
+                      <td><b>pricing_policy.json</b></td>
+                      <td>Chính sách chiết khấu</td>
+                      <td>3 Cấp</td>
+                      <td>v2026.1</td>
+                      <td><span class="badge-tag eligible">Hoạt động</span></td>
+                    </tr>
+                    <tr>
+                      <td><b>sales_team.json</b></td>
+                      <td>Nhân sự kinh doanh B2B</td>
+                      <td>6 Nhân viên</td>
+                      <td>v2026.1</td>
+                      <td><span class="badge-tag eligible">Hoạt động</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="saas-card">
+                <div class="saas-card-title-row">
+                  <div class="saas-card-title">📤 Nạp Dữ Liệu Sản Phẩm / Quy Tắc Mới (JSON)</div>
+                </div>
+                <textarea id="newDataTextarea" class="form-input" style="height:140px; font-family:monospace; font-size:12px;" placeholder='[{"sku": "PRD-NEW-001", "name": "Thiết bị mới", "unit_price": 10000000, "stock_available": 50, "standard_lead_days": 3, "aliases": ["new prd"]}]'></textarea>
+                <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+                  <button class="btn-primary-action" onclick="handleUploadNewData()">
+                    <span>Nạp Dữ Liệu Vào Hệ Thống</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- -------------------------------------------------------------
+               PAGE 13: CÀI ĐẶT & PHÂN QUYỀN
+               ------------------------------------------------------------- -->
+          <div id="page-settings" class="saas-page">
+            <div class="page-top-bar">
+              <div>
+                <h1 class="page-main-title">Cài Đặt Hệ Thống & Phân Quyền Vai Trò</h1>
+                <p class="page-main-sub">Kiểm soát quyền truy cập thực tế theo từng cấp bậc doanh nghiệp</p>
+              </div>
+            </div>
+
+            <div class="saas-card">
+              <div class="saas-card-title-row">
+                <div class="saas-card-title">👥 Ma Trận Phân Quyền Người Dùng (RBAC)</div>
+              </div>
+              <table class="saas-table">
+                <thead>
+                  <tr>
+                    <th>Vai Trò</th>
+                    <th>Tiếp Nhận & Bóc Tách</th>
+                    <th>Xem Hồ Sơ Phụ Trách</th>
+                    <th>Xem Toàn Bộ Hồ Sơ</th>
+                    <th>Phê Duyệt Chiết Khấu</th>
+                    <th>Quản Trị Hệ Thống</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><b>Chuyên viên Kinh doanh (Sales)</b></td>
+                    <td>✓</td>
+                    <td>✓</td>
+                    <td>✕</td>
+                    <td>✕</td>
+                    <td>✕</td>
+                  </tr>
+                  <tr>
+                    <td><b>Trưởng phòng Kinh doanh</b></td>
+                    <td>✓</td>
+                    <td>✓</td>
+                    <td>✓</td>
+                    <td>✓</td>
+                    <td>✕</td>
+                  </tr>
+                  <tr>
+                    <td><b>Quản trị viên (Admin - Lê Yến Như)</b></td>
+                    <td>✓</td>
+                    <td>✓</td>
+                    <td>✓</td>
+                    <td>✓</td>
+                    <td>✓</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js?v=multi_page_yellow"></script>
 </body>
 </html>

@@ -13,6 +13,31 @@ WEB_DIR = BASE_DIR / "web"
 
 orchestrator = B2BOpportunityOrchestrator()
 
+# Demo user credentials & roles
+USERS = {
+    "admin@minhan.com.vn": {
+        "name": "Lê Yến Như",
+        "email": "admin@minhan.com.vn",
+        "role": "Quản trị viên (Admin)",
+        "role_code": "ADMIN",
+        "avatar": "/assets/avatar.png?v=2"
+    },
+    "tuan.le@minhan.com.vn": {
+        "name": "Lê Văn Tuấn",
+        "email": "tuan.le@minhan.com.vn",
+        "role": "Trưởng phòng Kinh doanh B2B",
+        "role_code": "SALES_MANAGER",
+        "avatar": "/assets/avatar.png?v=2"
+    },
+    "an.nguyen@minhan.com.vn": {
+        "name": "Nguyễn Văn An",
+        "email": "an.nguyen@minhan.com.vn",
+        "role": "Senior Sales B2B",
+        "role_code": "SALES_REP",
+        "avatar": "/assets/avatar.png?v=2"
+    }
+}
+
 class B2BAgentHttpHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(WEB_DIR), **kwargs)
@@ -37,9 +62,9 @@ class B2BAgentHttpHandler(http.server.SimpleHTTPRequestHandler):
 
         elif path == "/api/catalog":
             res = {
-                "catalog": OFFICIAL_CATALOG,
-                "sales_reps": SALES_REPRESENTATIVES,
-                "policy": DISCOUNT_APPROVAL_POLICY
+                "catalog": orchestrator.catalog,
+                "sales_reps": orchestrator.sales_reps,
+                "policy": orchestrator.policy
             }
             self._send_json(res)
             return
@@ -104,7 +129,30 @@ class B2BAgentHttpHandler(http.server.SimpleHTTPRequestHandler):
         except Exception:
             payload = {}
 
-        if path == "/api/process_request":
+        if path == "/api/login":
+            email = payload.get("email", "").strip().lower()
+            password = payload.get("password", "").strip()
+            
+            # Allow any demo account or fallback to Lê Yến Như (Admin)
+            user = USERS.get(email)
+            if not user:
+                # If custom username/email entered
+                user = {
+                    "name": "Lê Yến Như",
+                    "email": email or "yennhu@minhan.com.vn",
+                    "role": "Quản trị viên & Chuyên gia AI",
+                    "role_code": "ADMIN",
+                    "avatar": "/assets/avatar.png?v=2"
+                }
+
+            self._send_json({
+                "status": "success",
+                "token": "tok_" + os.urandom(8).hex(),
+                "user": user
+            })
+            return
+
+        elif path == "/api/process_request":
             raw_text = payload.get("raw_text", "").strip()
             source = payload.get("source", "Email khách hàng")
             if not raw_text:
@@ -122,7 +170,7 @@ class B2BAgentHttpHandler(http.server.SimpleHTTPRequestHandler):
 
         elif path == "/api/approve":
             opp_id = payload.get("opp_id")
-            decision = payload.get("decision", "APPROVED")  # 'APPROVED' / 'REJECTED'
+            decision = payload.get("decision", "APPROVED")  # 'APPROVED' / 'REJECTED' / 'REVISE'
             note = payload.get("note", "")
 
             success = orchestrator.manager_decide_approval(opp_id, decision, note)
@@ -137,6 +185,25 @@ class B2BAgentHttpHandler(http.server.SimpleHTTPRequestHandler):
                 })
             else:
                 self._send_error(404, "Không tìm thấy cơ hội hoặc cơ hội không ở trạng thái Chờ duyệt")
+            return
+
+        elif path == "/api/data_upload":
+            # Nạp dữ liệu sản phẩm mới hoặc bộ dữ liệu mới không sửa code
+            dataset_type = payload.get("type", "PRODUCT_CATALOG")
+            items = payload.get("items", [])
+            if dataset_type == "PRODUCT_CATALOG" and isinstance(items, list):
+                for it in items:
+                    sku = it.get("sku")
+                    if sku:
+                        orchestrator.catalog[sku] = it
+                self._send_json({"status": "success", "message": f"Đã nạp thành công {len(items)} sản phẩm mới vào danh mục!"})
+                return
+            elif dataset_type == "POLICY":
+                new_policy = payload.get("policy", {})
+                orchestrator.policy.update(new_policy)
+                self._send_json({"status": "success", "message": "Đã cập nhật chính sách phê duyệt chiết khấu!"})
+                return
+            self._send_json({"status": "success", "message": "Dữ liệu đã được nạp thành công!"})
             return
 
         elif path == "/api/reset_demo":
@@ -175,15 +242,16 @@ class B2BAgentHttpHandler(http.server.SimpleHTTPRequestHandler):
             </tr>
             """
 
+        import datetime
         html = f"""
         <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
         <head><title>Báo Cáo Cơ Hội Bán Hàng B2B - Minh An Company</title>
         <style>
             body {{ font-family: 'Times New Roman', serif; margin: 30px; }}
-            h1 {{ color: #b8255f; text-align: center; }}
+            h1 {{ color: #b45309; text-align: center; }}
             h2 {{ color: #333; }}
             table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
-            th {{ background: #fdf2f4; border: 1px solid #ccc; padding: 10px; font-weight: bold; }}
+            th {{ background: #fef3c7; border: 1px solid #ccc; padding: 10px; font-weight: bold; }}
         </style>
         </head>
         <body>
@@ -216,7 +284,6 @@ class B2BAgentHttpHandler(http.server.SimpleHTTPRequestHandler):
         </body>
         </html>
         """
-        import datetime
         return html
 
 class ReusableThreadingServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
