@@ -200,8 +200,174 @@ function openSaasPage(pageId) {
 }
 
 // ==========================================
-// AUTHENTICATION & LOGIN LOGIC (STRICT)
+// AUTHENTICATION & LOGIN / REGISTER LOGIC
 // ==========================================
+function switchAuthMode(mode) {
+  const tabLogin = document.getElementById('tabBtnLogin');
+  const tabRegister = document.getElementById('tabBtnRegister');
+  const loginForm = document.getElementById('loginForm');
+  const regForm = document.getElementById('registerForm');
+  const titleEl = document.getElementById('authBoxTitle');
+  const subtitleEl = document.getElementById('authBoxSubtitle');
+  const errBox = document.getElementById('loginErrorAlert');
+  const succBox = document.getElementById('loginSuccessAlert');
+
+  errBox.style.display = 'none';
+  succBox.style.display = 'none';
+
+  if (mode === 'register') {
+    tabRegister.style.background = '#fff';
+    tabRegister.style.color = '#059669';
+    tabRegister.style.boxShadow = '0 2px 6px rgba(0,0,0,0.06)';
+    tabLogin.style.background = 'transparent';
+    tabLogin.style.color = '#64748b';
+    tabLogin.style.boxShadow = 'none';
+
+    loginForm.style.display = 'none';
+    regForm.style.display = 'block';
+
+    titleEl.textContent = 'Đăng Ký Tài Khoản Mới';
+    subtitleEl.textContent = 'Tạo tài khoản Khách hàng hoặc Chuyên viên B2B Minh An';
+  } else {
+    tabLogin.style.background = '#fff';
+    tabLogin.style.color = '#b45309';
+    tabLogin.style.boxShadow = '0 2px 6px rgba(0,0,0,0.06)';
+    tabRegister.style.background = 'transparent';
+    tabRegister.style.color = '#64748b';
+    tabRegister.style.boxShadow = 'none';
+
+    regForm.style.display = 'none';
+    loginForm.style.display = 'block';
+
+    titleEl.textContent = 'Minh An AI Agent Platform';
+    subtitleEl.textContent = 'Cổng xác thực & Đăng nhập doanh nghiệp';
+  }
+}
+
+async function handleRegisterSubmit(e) {
+  e.preventDefault();
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const company = document.getElementById('regCompany').value.trim();
+  const roleCode = document.getElementById('regRoleCode').value;
+  const pwd = document.getElementById('regPassword').value;
+  const confirmPwd = document.getElementById('regConfirmPassword').value;
+  const errBox = document.getElementById('loginErrorAlert');
+  const succBox = document.getElementById('loginSuccessAlert');
+
+  errBox.style.display = 'none';
+  succBox.style.display = 'none';
+
+  if (pwd !== confirmPwd) {
+    errBox.textContent = 'Mật khẩu xác nhận không khớp! Vui lòng nhập lại.';
+    errBox.style.display = 'block';
+    return;
+  }
+
+  if (pwd.length < 6) {
+    errBox.textContent = 'Mật khẩu phải có tối thiểu 6 ký tự!';
+    errBox.style.display = 'block';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        email,
+        phone,
+        company,
+        role_code: roleCode,
+        password: pwd
+      })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.status === 'success') {
+      currentUser = data.user;
+      currentToken = data.token;
+      localStorage.setItem('minhan_user', JSON.stringify(currentUser));
+      localStorage.setItem('minhan_token', currentToken);
+
+      succBox.textContent = data.message || 'Đăng ký tài khoản thành công! Đang chuyển vào hệ thống...';
+      succBox.style.display = 'block';
+
+      applyUserInfoToUi(currentUser);
+      await loadBackendData();
+
+      setTimeout(() => {
+        navigateTo('app');
+        openSaasPage('page-dashboard');
+      }, 800);
+    } else {
+      errBox.innerHTML = `<b>Lỗi đăng ký:</b> ${data.error || 'Không thể tạo tài khoản!'}`;
+      errBox.style.display = 'block';
+    }
+  } catch (err) {
+    errBox.innerHTML = '<b>Lỗi hệ thống:</b> Không thể kết nối tới máy chủ!';
+    errBox.style.display = 'block';
+  }
+}
+
+async function handleUpdateProfile(e) {
+  e.preventDefault();
+  const name = document.getElementById('profInputName').value.trim();
+  const phone = document.getElementById('profInputPhone').value.trim();
+  const company = document.getElementById('profInputCompany').value.trim();
+
+  try {
+    const res = await fetch('/api/user/update_profile', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ name, phone, company })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.status === 'success') {
+      alert('Đã cập nhật thông tin hồ sơ cá nhân thành công!');
+      currentUser = data.user;
+      localStorage.setItem('minhan_user', JSON.stringify(currentUser));
+      applyUserInfoToUi(currentUser);
+    } else {
+      alert('Lỗi: ' + (data.error || 'Không thể cập nhật!'));
+    }
+  } catch (err) {
+    alert('Lỗi kết nối máy chủ');
+  }
+}
+
+async function handleChangePassword(e) {
+  e.preventDefault();
+  const oldPwd = document.getElementById('pwdCurrent').value;
+  const newPwd = document.getElementById('pwdNew').value;
+  const confirmNew = document.getElementById('pwdConfirm').value;
+
+  if (newPwd !== confirmNew) {
+    alert('Mật khẩu mới và mật khẩu xác nhận không trùng khớp!');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/user/change_password', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ old_password: oldPwd, new_password: newPwd })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.status === 'success') {
+      alert('Chúc mừng! Đã đổi mật khẩu thành công. Mật khẩu mới có hiệu lực ngay lập tức.');
+      document.getElementById('changePasswordForm').reset();
+    } else {
+      alert('Lỗi đổi mật khẩu: ' + (data.error || 'Mật khẩu cũ không đúng!'));
+    }
+  } catch (err) {
+    alert('Lỗi kết nối máy chủ');
+  }
+}
 async function handleLoginSubmit(e) {
   e.preventDefault();
   const email = document.getElementById('loginEmail').value.trim();
@@ -291,6 +457,31 @@ function applyUserInfoToUi(user) {
   if (nameEl) nameEl.textContent = user.name || 'Người dùng';
   if (roleEl) roleEl.textContent = user.role_name || user.role_code;
   if (avatarEl && user.avatar) avatarEl.src = user.avatar;
+
+  // Profile Page elements
+  const pName = document.getElementById('profileCardName');
+  const pEmail = document.getElementById('profileCardEmail');
+  const pRole = document.getElementById('profileCardRole');
+  const pId = document.getElementById('profileCardId');
+  const pComp = document.getElementById('profileCardCompany');
+  const pPhone = document.getElementById('profileCardPhone');
+  const pAvatar = document.getElementById('profileCardAvatar');
+
+  if (pName) pName.textContent = user.name || 'Người dùng';
+  if (pEmail) pEmail.textContent = user.email || 'N/A';
+  if (pRole) pRole.textContent = user.role_name || user.role_code;
+  if (pId) pId.textContent = user.id || 'USR-999';
+  if (pComp) pComp.textContent = user.company || user.department || 'Minh An B2B';
+  if (pPhone) pPhone.textContent = user.phone || 'Chưa cập nhật';
+  if (pAvatar && user.avatar) pAvatar.src = user.avatar;
+
+  // Prefill inputs
+  const inName = document.getElementById('profInputName');
+  const inPhone = document.getElementById('profInputPhone');
+  const inComp = document.getElementById('profInputCompany');
+  if (inName) inName.value = user.name || '';
+  if (inPhone) inPhone.value = user.phone || '';
+  if (inComp) inComp.value = user.company || user.department || '';
 }
 
 // Áp dụng giao diện và phân quyền theo đúng vai trò thực tế

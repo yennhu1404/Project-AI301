@@ -225,9 +225,138 @@ class B2BAgentHttpHandler(http.server.SimpleHTTPRequestHandler):
             payload = {}
 
         # -------------------------------------------------------------
+        # XÁC THỰC ĐĂNG KÝ TÀI KHOẢN MỚI (SIGN UP / REGISTER)
+        # -------------------------------------------------------------
+        if path == "/api/register":
+            name = payload.get("name", "").strip()
+            email = payload.get("email", "").strip().lower()
+            password = payload.get("password", "").strip()
+            phone = payload.get("phone", "").strip()
+            company = payload.get("company", "").strip() or "Doanh nghiệp B2B"
+            role_code = payload.get("role_code", "CUSTOMER").strip()
+
+            if not name or not email or not password:
+                self._send_error(400, "Vui lòng điền đầy đủ Họ tên, Email và Mật khẩu!")
+                return
+            
+            if len(password) < 6:
+                self._send_error(400, "Mật khẩu phải có tối thiểu 6 ký tự để đảm bảo an toàn!")
+                return
+
+            if email in USER_DATABASE:
+                self._send_error(400, f"Email '{email}' đã tồn tại trong hệ thống. Vui lòng đăng nhập hoặc sử dụng email khác!")
+                return
+
+            role_name_map = {
+                "CUSTOMER": "Khách hàng Doanh nghiệp (B2B Client)",
+                "SALES_REP": "Chuyên viên Kinh doanh B2B (Sales)",
+                "SALES_MANAGER": "Trưởng phòng Kinh doanh B2B"
+            }
+            new_role_name = role_name_map.get(role_code, "Khách hàng Doanh nghiệp (B2B Client)")
+            new_user_id = f"USR-{len(USER_DATABASE)+1:03d}"
+            avatar_url = f"https://api.dicebear.com/7.x/adventurer/png?seed={name.replace(' ', '')}&backgroundColor=fef3c7"
+
+            new_record = {
+                "id": new_user_id,
+                "email": email,
+                "name": name,
+                "phone": phone,
+                "company": company,
+                "password_hash": hash_password(password),
+                "role_code": role_code,
+                "role_name": new_role_name,
+                "department": company,
+                "avatar": avatar_url,
+                "permissions": ["submit_request", "view_own_quotes"] if role_code == "CUSTOMER" else ["create_opp", "view_assigned_opps"]
+            }
+
+            USER_DATABASE[email] = new_record
+
+            # Tự động đăng nhập và sinh phiên an toàn
+            token = "tok_" + hashlib.sha256((email + str(time.time())).encode('utf-8')).hexdigest()[:24]
+            user_safe_info = {
+                "id": new_record["id"],
+                "name": new_record["name"],
+                "email": new_record["email"],
+                "phone": phone,
+                "company": company,
+                "role_code": new_record["role_code"],
+                "role_name": new_record["role_name"],
+                "department": new_record["department"],
+                "avatar": new_record["avatar"],
+                "permissions": new_record["permissions"]
+            }
+
+            ACTIVE_SESSIONS[token] = {
+                "user": user_safe_info,
+                "created_at": time.time()
+            }
+
+            self._send_json({
+                "status": "success",
+                "token": token,
+                "user": user_safe_info,
+                "message": f"Chúc mừng {name}! Tài khoản của bạn đã được đăng ký và đăng nhập thành công."
+            })
+            return
+
+        # -------------------------------------------------------------
+        # CẬP NHẬT THÔNG TIN HỒ SƠ & ĐỔI MẬT KHẨU
+        # -------------------------------------------------------------
+        elif path == "/api/user/update_profile":
+            user = self._get_authenticated_user()
+            if not user:
+                self._send_error(401, "Bạn chưa đăng nhập!")
+                return
+            
+            email = user["email"]
+            if email in USER_DATABASE:
+                new_name = payload.get("name", user["name"]).strip()
+                new_phone = payload.get("phone", user.get("phone", "")).strip()
+                new_company = payload.get("company", user.get("company", "")).strip()
+                
+                USER_DATABASE[email]["name"] = new_name
+                USER_DATABASE[email]["phone"] = new_phone
+                USER_DATABASE[email]["company"] = new_company
+                
+                # Cập nhật session hiện tại
+                user["name"] = new_name
+                user["phone"] = new_phone
+                user["company"] = new_company
+                
+                self._send_json({"status": "success", "user": user, "message": "Đã cập nhật thông tin hồ sơ thành công!"})
+            else:
+                self._send_error(404, "Không tìm thấy người dùng trong cơ sở dữ liệu!")
+            return
+
+        elif path == "/api/user/change_password":
+            user = self._get_authenticated_user()
+            if not user:
+                self._send_error(401, "Bạn chưa đăng nhập!")
+                return
+            
+            email = user["email"]
+            old_pwd = payload.get("old_password", "").strip()
+            new_pwd = payload.get("new_password", "").strip()
+            
+            if len(new_pwd) < 6:
+                self._send_error(400, "Mật khẩu mới phải có tối thiểu 6 ký tự!")
+                return
+                
+            if email in USER_DATABASE:
+                if hash_password(old_pwd) != USER_DATABASE[email]["password_hash"]:
+                    self._send_error(400, "Mật khẩu cũ không chính xác!")
+                    return
+                USER_DATABASE[email]["password_hash"] = hash_password(new_pwd)
+                self._send_json({"status": "success", "message": "Đã đổi mật khẩu thành công!"})
+            else:
+                self._send_error(404, "Không tìm thấy người dùng!")
+            return
+
+        # -------------------------------------------------------------
         # XÁC THỰC ĐĂNG NHẬP CHÍNH XÁC (STRICT AUTHENTICATION)
         # -------------------------------------------------------------
-        if path == "/api/login":
+        elif path == "/api/login":
             email = payload.get("email", "").strip().lower()
             password = payload.get("password", "").strip()
 

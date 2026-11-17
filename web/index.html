@@ -194,25 +194,40 @@
   </div>
 
   <!-- ====================================================================
-       2. PUBLIC AREA: LOGIN PAGE (DEDICATED VIEW)
+       2. PUBLIC AREA: AUTHENTICATION (LOGIN & SIGN UP TABS)
        ==================================================================== -->
   <div id="publicLoginView">
-    <div class="login-modal-box">
+    <div class="login-modal-box" style="max-width: 480px;">
       <div class="login-header-center">
         <div class="login-brand-logo">MA</div>
-        <h2 class="login-title">Welcome to Minh An AI Agent</h2>
-        <p class="login-subtitle">Đăng nhập để truy cập hệ thống quản lý cơ hội bán hàng B2B</p>
+        <h2 class="login-title" id="authBoxTitle">Minh An AI Agent Platform</h2>
+        <p class="login-subtitle" id="authBoxSubtitle">Cổng xác thực & Quản trị tài khoản doanh nghiệp</p>
       </div>
 
+      <!-- Auth Switch Tabs (Login vs Register) -->
+      <div style="display:flex; background:#f1f5f9; border-radius:12px; padding:4px; margin-bottom:20px;">
+        <button type="button" id="tabBtnLogin" onclick="switchAuthMode('login')" style="flex:1; border:none; padding:9px; border-radius:10px; font-weight:700; font-size:13px; cursor:pointer; background:#fff; color:#b45309; box-shadow:0 2px 6px rgba(0,0,0,0.06);">
+          ĐĂNG NHẬP
+        </button>
+        <button type="button" id="tabBtnRegister" onclick="switchAuthMode('register')" style="flex:1; border:none; padding:9px; border-radius:10px; font-weight:600; font-size:13px; cursor:pointer; background:transparent; color:#64748b;">
+          ĐĂNG KÝ MỚI
+        </button>
+      </div>
+
+      <!-- Notification Alerts -->
       <div id="loginErrorAlert" style="display:none; background:#fee2e2; border:1px solid #f87171; color:#b91c1c; padding:10px; border-radius:10px; font-size:12.5px; margin-bottom:14px;">
         <!-- Error text -->
       </div>
+      <div id="loginSuccessAlert" style="display:none; background:#ecfdf5; border:1px solid #34d399; color:#065f46; padding:10px; border-radius:10px; font-size:12.5px; margin-bottom:14px;">
+        <!-- Success text -->
+      </div>
 
+      <!-- 1. LOGIN FORM -->
       <form id="loginForm" onsubmit="handleLoginSubmit(event)">
         <div class="form-group">
           <label class="form-label">Email hoặc Tên đăng nhập</label>
           <div class="form-input-wrap">
-            <input type="text" id="loginEmail" class="form-input" placeholder="yennhu@minhan.com.vn" required>
+            <input type="text" id="loginEmail" class="form-input" placeholder="admin@minhan.com.vn" required>
           </div>
         </div>
 
@@ -220,7 +235,7 @@
           <label class="form-label">Mật khẩu</label>
           <div class="form-input-wrap">
             <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
-            <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility()">👁️</button>
+            <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('loginPassword')">👁️</button>
           </div>
         </div>
 
@@ -233,7 +248,63 @@
         </div>
 
         <button type="submit" class="btn-submit-login">
-          <span>ĐĂNG NHẬP HỆ THỐNG</span>
+          <span>ĐĂNG NHẬP VÀO HỆ THỐNG</span>
+        </button>
+      </form>
+
+      <!-- 2. REGISTER FORM -->
+      <form id="registerForm" style="display:none;" onsubmit="handleRegisterSubmit(event)">
+        <div class="form-group">
+          <label class="form-label">Họ và tên của bạn</label>
+          <input type="text" id="regName" class="form-input" placeholder="Ví dụ: Hoàng Minh Tuấn" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email đăng ký</label>
+          <input type="email" id="regEmail" class="form-input" placeholder="tuan.hoang@company.com" required>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Số điện thoại</label>
+            <input type="text" id="regPhone" class="form-input" placeholder="0912xxxxxx">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tên công ty / Doanh nghiệp</label>
+            <input type="text" id="regCompany" class="form-input" placeholder="Tập đoàn An Nam">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Loại tài khoản / Vai trò</label>
+          <select id="regRoleCode" class="form-input" style="padding:10px 12px;">
+            <option value="CUSTOMER">Khách hàng Doanh nghiệp (Gửi & theo dõi yêu cầu báo giá)</option>
+            <option value="SALES_REP">Chuyên viên Kinh doanh B2B (Tiếp nhận & xử lý cơ hội)</option>
+          </select>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Mật khẩu (tối thiểu 6 ký tự)</label>
+            <div class="form-input-wrap">
+              <input type="password" id="regPassword" class="form-input" placeholder="••••••••" required minlength="6">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Xác nhận mật khẩu</label>
+            <div class="form-input-wrap">
+              <input type="password" id="regConfirmPassword" class="form-input" placeholder="••••••••" required minlength="6">
+            </div>
+          </div>
+        </div>
+
+        <div class="login-extra-row">
+          <span style="font-size:12px; color:#64748b;">Bằng việc đăng ký, bạn đồng ý với quy chế bảo mật Minh An.</span>
+          <a href="javascript:void(0)" onclick="navigateTo('landing')" style="color:#b45309; text-decoration:none; font-weight:600;">&larr; Về trang chủ</a>
+        </div>
+
+        <button type="submit" class="btn-submit-login" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%);">
+          <span>TẠO TÀI KHOẢN MỚI NGAY</span>
         </button>
       </form>
 
@@ -356,7 +427,13 @@
             </a>
           </li>
 
-          <li class="menu-section-label">Hệ thống</li>
+          <li class="menu-section-label">Hệ thống & Cá nhân</li>
+          <li>
+            <a class="menu-link" data-page="page-profile" onclick="openSaasPage('page-profile')">
+              <span class="menu-icon">👤</span>
+              <span class="menu-label">Hồ sơ tài khoản</span>
+            </a>
+          </li>
           <li>
             <a class="menu-link" data-page="page-data" onclick="openSaasPage('page-data')">
               <span class="menu-icon">🗄️</span>
@@ -826,6 +903,98 @@
                   <!-- Audit logs -->
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          <!-- -------------------------------------------------------------
+               PAGE 14: HỒ SƠ TÀI KHOẢN CÁ NHÂN (USER PROFILE)
+               ------------------------------------------------------------- -->
+          <div id="page-profile" class="saas-page">
+            <div class="page-top-bar">
+              <div>
+                <h1 class="page-main-title">Hồ Sơ Cá Nhân & Quản Trị Tài Khoản</h1>
+                <p class="page-main-sub">Quản lý thông tin định danh, bảo mật mật khẩu và phân quyền người dùng</p>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 340px 1fr; gap:24px;">
+              <!-- Profile Card -->
+              <div class="saas-card" style="text-align:center;">
+                <div style="position:relative; width:110px; height:110px; margin:0 auto 16px auto; border-radius:50%; padding:3px; background:linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);">
+                  <img src="/assets/avatar.png?v=2" id="profileCardAvatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover; background:#fff;" alt="Avatar">
+                </div>
+                <h2 style="font-size:18px; font-weight:800; color:#1e293b;" id="profileCardName">Lê Yến Như</h2>
+                <div style="font-size:13px; color:#64748b;" id="profileCardEmail">admin@minhan.com.vn</div>
+                <div style="margin-top:8px;">
+                  <span class="badge-tag eligible" id="profileCardRole">Quản trị viên (Admin)</span>
+                </div>
+
+                <div style="margin-top:20px; padding-top:16px; border-top:1px dashed #e2e8f0; text-align:left; font-size:12.5px; line-height:1.8;">
+                  <div><b>Mã định danh:</b> <code id="profileCardId">USR-001</code></div>
+                  <div><b>Công ty / Đơn vị:</b> <span id="profileCardCompany">Minh An Company</span></div>
+                  <div><b>Số điện thoại:</b> <span id="profileCardPhone">0901234567</span></div>
+                  <div><b>Trạng thái:</b> <span style="color:#10b981; font-weight:700;">● Đang hoạt động</span></div>
+                </div>
+              </div>
+
+              <!-- Settings & Password Tabs -->
+              <div>
+                <!-- Update Info Card -->
+                <div class="saas-card">
+                  <div class="saas-card-title-row">
+                    <div class="saas-card-title">✏️ Cập Nhật Thông Tin Cá Nhân</div>
+                  </div>
+                  <form id="updateProfileForm" onsubmit="handleUpdateProfile(event)">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:14px;">
+                      <div>
+                        <label class="form-label">Họ và tên</label>
+                        <input type="text" id="profInputName" class="form-input" required>
+                      </div>
+                      <div>
+                        <label class="form-label">Số điện thoại</label>
+                        <input type="text" id="profInputPhone" class="form-input">
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Tên công ty / Phòng ban</label>
+                      <input type="text" id="profInputCompany" class="form-input">
+                    </div>
+                    <div style="display:flex; justify-content:flex-end;">
+                      <button type="submit" class="btn-primary-action">
+                        <span>Lưu Thay Đổi Thông Tin</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                <!-- Change Password Card -->
+                <div class="saas-card">
+                  <div class="saas-card-title-row">
+                    <div class="saas-card-title">🔒 Đổi Mật Khẩu Đăng Nhập</div>
+                  </div>
+                  <form id="changePasswordForm" onsubmit="handleChangePassword(event)">
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-bottom:14px;">
+                      <div>
+                        <label class="form-label">Mật khẩu hiện tại</label>
+                        <input type="password" id="pwdCurrent" class="form-input" required>
+                      </div>
+                      <div>
+                        <label class="form-label">Mật khẩu mới</label>
+                        <input type="password" id="pwdNew" class="form-input" required minlength="6">
+                      </div>
+                      <div>
+                        <label class="form-label">Nhập lại mật khẩu mới</label>
+                        <input type="password" id="pwdConfirm" class="form-input" required minlength="6">
+                      </div>
+                    </div>
+                    <div style="display:flex; justify-content:flex-end;">
+                      <button type="submit" class="btn-secondary-tool" style="background:#b45309; color:#fff; border-color:#b45309;">
+                        <span>Cập Nhật Mật Khẩu Mới</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
             </div>
           </div>
 
