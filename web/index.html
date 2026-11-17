@@ -239,19 +239,41 @@
 
       <!-- Quick 1-Click Demo Accounts -->
       <div class="demo-accounts-pill-box">
-        <div class="demo-acc-title">⚡ Chọn nhanh tài khoản Demo:</div>
+        <div class="demo-acc-title">🔐 BẢNG TÀI KHOẢN XÁC THỰC BẢO MẬT & PHÂN QUYỀN:</div>
+        <p style="font-size:11.5px; color:#64748b; margin-bottom:10px;">
+          *Hệ thống kiểm tra mật khẩu thực tế. Bạn có thể thử nhập sai mật khẩu để kiểm tra tính năng bảo mật (Validation Error).
+        </p>
         <div class="demo-pills-list">
-          <button class="demo-pill-btn" onclick="fillDemoAccount('admin@minhan.com.vn', '123456')">
-            <span>👤 <b>Lê Yến Như</b> (Quản trị viên)</span>
-            <span style="color:#b45309;">Chọn &rarr;</span>
+          <button class="demo-pill-btn" onclick="fillDemoAccount('admin@minhan.com.vn', 'admin123')">
+            <div>
+              <div style="font-weight:700;">👤 Lê Yến Như (Admin / AI Architect)</div>
+              <small style="color:#64748b;">admin@minhan.com.vn | Pass: <code>admin123</code></small>
+            </div>
+            <span style="color:#b45309; font-weight:700;">Điền &rarr;</span>
           </button>
-          <button class="demo-pill-btn" onclick="fillDemoAccount('tuan.le@minhan.com.vn', '123456')">
-            <span>👔 <b>Lê Văn Tuấn</b> (Trưởng phòng KD)</span>
-            <span style="color:#b45309;">Chọn &rarr;</span>
+
+          <button class="demo-pill-btn" onclick="fillDemoAccount('tuan.le@minhan.com.vn', 'manager123')">
+            <div>
+              <div style="font-weight:700;">👔 Lê Văn Tuấn (Trưởng phòng Kinh doanh)</div>
+              <small style="color:#64748b;">tuan.le@minhan.com.vn | Pass: <code>manager123</code></small>
+            </div>
+            <span style="color:#b45309; font-weight:700;">Điền &rarr;</span>
           </button>
-          <button class="demo-pill-btn" onclick="fillDemoAccount('an.nguyen@minhan.com.vn', '123456')">
-            <span>💼 <b>Nguyễn Văn An</b> (Chuyên viên Sales)</span>
-            <span style="color:#b45309;">Chọn &rarr;</span>
+
+          <button class="demo-pill-btn" onclick="fillDemoAccount('an.nguyen@minhan.com.vn', 'sales123')">
+            <div>
+              <div style="font-weight:700;">💼 Nguyễn Văn An (Chuyên viên Sales B2B)</div>
+              <small style="color:#64748b;">an.nguyen@minhan.com.vn | Pass: <code>sales123</code></small>
+            </div>
+            <span style="color:#b45309; font-weight:700;">Điền &rarr;</span>
+          </button>
+
+          <button class="demo-pill-btn" onclick="fillDemoAccount('user@digitech.vn', 'user123')">
+            <div>
+              <div style="font-weight:700;">🏢 Trần Văn Hùng (Khách hàng DigiTech)</div>
+              <small style="color:#64748b;">user@digitech.vn | Pass: <code>user123</code></small>
+            </div>
+            <span style="color:#b45309; font-weight:700;">Điền &rarr;</span>
           </button>
         </div>
       </div>
@@ -397,10 +419,22 @@
                PAGE 3: DASHBOARD - TỔNG QUAN
                ------------------------------------------------------------- -->
           <div id="page-dashboard" class="saas-page active">
+            <!-- Dynamic Role Welcome Banner -->
+            <div id="userRoleGreetingBanner" style="margin-bottom:20px; padding:14px 20px; border-radius:14px; background:#fffdf0; border:1.5px solid #fde68a; display:flex; justify-content:space-between; align-items:center;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div style="font-size:24px;" id="roleGreetingIcon">👤</div>
+                <div>
+                  <div style="font-size:14.5px; font-weight:800; color:#1e293b;" id="roleGreetingTitle">Chào mừng Lê Yến Như</div>
+                  <div style="font-size:12.5px; color:#64748b;" id="roleGreetingDesc">Bạn đang đăng nhập với tư cách Quản trị viên (Admin)</div>
+                </div>
+              </div>
+              <span class="badge-tag eligible" id="roleGreetingBadge" style="font-size:12px; padding:6px 14px;">Quyền Toàn Cục</span>
+            </div>
+
             <div class="page-top-bar">
               <div>
-                <h1 class="page-main-title">Tổng Quan Tình Hình Xử Lý Cơ Hội B2B</h1>
-                <p class="page-main-sub">Theo dõi thời gian thực 4 trạng thái nghiệp vụ và tiến độ AI Agent</p>
+                <h1 class="page-main-title" id="dashRoleHeaderTitle">Tổng Quan Tình Hình Xử Lý Cơ Hội B2B</h1>
+                <p class="page-main-sub">Theo dõi thời gian thực các chỉ số theo thẩm quyền của bạn</p>
               </div>
               <button class="btn-primary-action" onclick="openSaasPage('page-ingestion')">
                 <span>➕ Tạo yêu cầu mới</span>

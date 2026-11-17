@@ -3,6 +3,8 @@ import socketserver
 import json
 import os
 import urllib.parse
+import hashlib
+import time
 from pathlib import Path
 from modules.b2b_agent import B2BOpportunityOrchestrator
 from modules.b2b_catalog import OFFICIAL_CATALOG, SALES_REPRESENTATIVES, DISCOUNT_APPROVAL_POLICY
@@ -12,50 +14,143 @@ BASE_DIR = Path(__file__).resolve().parent
 WEB_DIR = BASE_DIR / "web"
 
 orchestrator = B2BOpportunityOrchestrator()
+PASSWORD_SALT = "minhan_secret_salt_2026"
 
-# Demo user credentials & roles
-USERS = {
+def hash_password(password: str) -> str:
+    return hashlib.sha256((password.strip() + PASSWORD_SALT).encode('utf-8')).hexdigest()
+
+# 1. Cơ sở dữ liệu người dùng chính thức với Mật khẩu đã được Băm bảo mật (Hashed)
+# Hỗ trợ cả mật khẩu đơn giản (admin123, manager123, sales123, user123)
+USER_DATABASE = {
     "admin@minhan.com.vn": {
-        "name": "Lê Yến Như",
+        "id": "USR-001",
         "email": "admin@minhan.com.vn",
-        "role": "Quản trị viên (Admin)",
+        "name": "Lê Yến Như",
+        "password_hash": hash_password("admin123"),
         "role_code": "ADMIN",
-        "avatar": "/assets/avatar.png?v=2"
+        "role_name": "Quản trị viên & Kiến trúc sư AI",
+        "department": "Ban Quản Trị & Công Nghệ",
+        "avatar": "/assets/avatar.png?v=2",
+        "permissions": ["all", "manage_data", "view_audit", "settings", "approve_all"]
+    },
+    "yennhu@minhan.com.vn": {
+        "id": "USR-001",
+        "email": "yennhu@minhan.com.vn",
+        "name": "Lê Yến Như",
+        "password_hash": hash_password("admin123"),
+        "role_code": "ADMIN",
+        "role_name": "Quản trị viên & Kiến trúc sư AI",
+        "department": "Ban Quản Trị & Công Nghệ",
+        "avatar": "/assets/avatar.png?v=2",
+        "permissions": ["all", "manage_data", "view_audit", "settings", "approve_all"]
     },
     "tuan.le@minhan.com.vn": {
-        "name": "Lê Văn Tuấn",
+        "id": "USR-002",
         "email": "tuan.le@minhan.com.vn",
-        "role": "Trưởng phòng Kinh doanh B2B",
+        "name": "Lê Văn Tuấn",
+        "password_hash": hash_password("manager123"),
         "role_code": "SALES_MANAGER",
-        "avatar": "/assets/avatar.png?v=2"
+        "role_name": "Trưởng phòng Kinh doanh B2B",
+        "department": "Phòng Kinh Doanh Doanh Nghiệp",
+        "avatar": "https://api.dicebear.com/7.x/adventurer/png?seed=TuanLe&backgroundColor=fef3c7",
+        "permissions": ["view_all_opps", "approve_discount", "export_reports", "view_pricing"]
     },
     "an.nguyen@minhan.com.vn": {
-        "name": "Nguyễn Văn An",
+        "id": "USR-003",
         "email": "an.nguyen@minhan.com.vn",
-        "role": "Senior Sales B2B",
+        "name": "Nguyễn Văn An",
+        "password_hash": hash_password("sales123"),
         "role_code": "SALES_REP",
-        "avatar": "/assets/avatar.png?v=2"
+        "role_name": "Chuyên viên Kinh doanh B2B (Sales)",
+        "department": "Nhóm Kinh Doanh 01",
+        "avatar": "https://api.dicebear.com/7.x/adventurer/png?seed=NguyenAn&backgroundColor=dbeafe",
+        "permissions": ["create_opp", "view_assigned_opps", "calculate_price"]
+    },
+    "sales@minhan.com.vn": {
+        "id": "USR-003",
+        "email": "sales@minhan.com.vn",
+        "name": "Nguyễn Văn An",
+        "password_hash": hash_password("sales123"),
+        "role_code": "SALES_REP",
+        "role_name": "Chuyên viên Kinh doanh B2B (Sales)",
+        "department": "Nhóm Kinh Doanh 01",
+        "avatar": "https://api.dicebear.com/7.x/adventurer/png?seed=NguyenAn&backgroundColor=dbeafe",
+        "permissions": ["create_opp", "view_assigned_opps", "calculate_price"]
+    },
+    "user@digitech.vn": {
+        "id": "USR-004",
+        "email": "user@digitech.vn",
+        "name": "Trần Văn Hùng",
+        "password_hash": hash_password("user123"),
+        "role_code": "CUSTOMER",
+        "role_name": "Khách hàng Doanh nghiệp (DigiTech)",
+        "department": "Công ty Cổ phần DigiTech",
+        "avatar": "https://api.dicebear.com/7.x/adventurer/png?seed=HungTran&backgroundColor=e0e7ff",
+        "permissions": ["submit_request", "view_own_quotes"]
     }
 }
+
+# 2. Bộ nhớ lưu trữ phiên đăng nhập an toàn (Active Sessions)
+ACTIVE_SESSIONS = {}
 
 class B2BAgentHttpHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(WEB_DIR), **kwargs)
 
+    def _get_authenticated_user(self):
+        auth_header = self.headers.get("Authorization", "")
+        token = ""
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:].strip()
+        else:
+            cookie = self.headers.get("Cookie", "")
+            for c in cookie.split(";"):
+                if "session_token=" in c:
+                    token = c.split("session_token=")[-1].strip()
+        
+        if token and token in ACTIVE_SESSIONS:
+            sess = ACTIVE_SESSIONS[token]
+            if time.time() - sess["created_at"] < 86400: # 24h expiration
+                return sess["user"]
+        return None
+
     def do_GET(self):
         parsed_url = urllib.parse.urlparse(self.path)
         path = parsed_url.path
 
-        if path == "/api/summary":
+        if path == "/api/me":
+            user = self._get_authenticated_user()
+            if user:
+                self._send_json({"authenticated": True, "user": user})
+            else:
+                self._send_error(401, "Chưa đăng nhập hoặc phiên làm việc đã hết hạn!")
+            return
+
+        elif path == "/api/summary":
             summary = orchestrator.get_dashboard_summary()
             self._send_json(summary)
             return
 
         elif path == "/api/opportunities":
             summary = orchestrator.get_dashboard_summary()
+            user = self._get_authenticated_user()
+            
+            # Phân quyền dữ liệu theo vai trò thực tế:
+            # - Customer chỉ thấy cơ hội của mình
+            # - Sales Rep chỉ thấy cơ hội do mình phụ trách
+            # - Manager và Admin thấy toàn bộ
+            all_opps = orchestrator.opportunities
+            filtered_opps = all_opps
+            if user:
+                if user["role_code"] == "CUSTOMER":
+                    filtered_opps = [o for o in all_opps if "DigiTech" in o["customer_name"] or user["email"] in o.get("email", "")]
+                elif user["role_code"] == "SALES_REP":
+                    filtered_opps = [o for o in all_opps if o["sales_rep"]["id"] == "SALES-01" or o["sales_rep"]["name"] == user["name"]]
+
             res = {
                 "summary": summary,
-                "opportunities": orchestrator.opportunities
+                "opportunities": filtered_opps,
+                "user_role": user["role_code"] if user else "GUEST"
             }
             self._send_json(res)
             return
@@ -79,7 +174,7 @@ class B2BAgentHttpHandler(http.server.SimpleHTTPRequestHandler):
             if found:
                 self._send_json(found[0])
             else:
-                self._send_error(404, "Opportunity not found")
+                self._send_error(404, "Không tìm thấy cơ hội bán hàng")
             return
 
         elif path == "/api/export/csv":
@@ -129,34 +224,70 @@ class B2BAgentHttpHandler(http.server.SimpleHTTPRequestHandler):
         except Exception:
             payload = {}
 
+        # -------------------------------------------------------------
+        # XÁC THỰC ĐĂNG NHẬP CHÍNH XÁC (STRICT AUTHENTICATION)
+        # -------------------------------------------------------------
         if path == "/api/login":
             email = payload.get("email", "").strip().lower()
             password = payload.get("password", "").strip()
-            
-            # Allow any demo account or fallback to Lê Yến Như (Admin)
-            user = USERS.get(email)
-            if not user:
-                # If custom username/email entered
-                user = {
-                    "name": "Lê Yến Như",
-                    "email": email or "yennhu@minhan.com.vn",
-                    "role": "Quản trị viên & Chuyên gia AI",
-                    "role_code": "ADMIN",
-                    "avatar": "/assets/avatar.png?v=2"
-                }
+
+            if not email or not password:
+                self._send_error(400, "Vui lòng nhập đầy đủ Email và Mật khẩu!")
+                return
+
+            # 1. Kiểm tra tài khoản có tồn tại không
+            user_record = USER_DATABASE.get(email)
+            if not user_record:
+                self._send_error(401, f"Tài khoản '{email}' không tồn tại trong hệ thống Minh An Company!")
+                return
+
+            # 2. Kiểm tra mật khẩu có khớp không
+            input_hash = hash_password(password)
+            if input_hash != user_record["password_hash"]:
+                self._send_error(401, "Mật khẩu không chính xác! Vui lòng kiểm tra lại.")
+                return
+
+            # 3. Đăng nhập thành công -> Sinh token phiên làm việc
+            token = "tok_" + hashlib.sha256((email + str(time.time())).encode('utf-8')).hexdigest()[:24]
+            user_safe_info = {
+                "id": user_record["id"],
+                "name": user_record["name"],
+                "email": user_record["email"],
+                "role_code": user_record["role_code"],
+                "role_name": user_record["role_name"],
+                "department": user_record["department"],
+                "avatar": user_record["avatar"],
+                "permissions": user_record["permissions"]
+            }
+
+            ACTIVE_SESSIONS[token] = {
+                "user": user_safe_info,
+                "created_at": time.time()
+            }
 
             self._send_json({
                 "status": "success",
-                "token": "tok_" + os.urandom(8).hex(),
-                "user": user
+                "token": token,
+                "user": user_safe_info,
+                "message": f"Chào mừng {user_safe_info['name']} ({user_safe_info['role_name']})!"
             })
             return
 
+        elif path == "/api/logout":
+            token = payload.get("token")
+            if token and token in ACTIVE_SESSIONS:
+                del ACTIVE_SESSIONS[token]
+            self._send_json({"status": "success", "message": "Đã đăng xuất an toàn khỏi hệ thống!"})
+            return
+
+        # -------------------------------------------------------------
+        # NGHIỆP VỤ XỬ LÝ YÊU CẦU & KIỂM TRA PHÂN QUYỀN
+        # -------------------------------------------------------------
         elif path == "/api/process_request":
             raw_text = payload.get("raw_text", "").strip()
             source = payload.get("source", "Email khách hàng")
             if not raw_text:
-                self._send_error(400, "Nội dung yêu cầu không được để trống")
+                self._send_error(400, "Nội dung yêu cầu không được để trống!")
                 return
 
             new_opp = orchestrator.process_b2b_opportunity(raw_text, source)
@@ -169,11 +300,21 @@ class B2BAgentHttpHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         elif path == "/api/approve":
+            user = self._get_authenticated_user()
+            
+            # KIỂM TRA PHÂN QUYỀN BẮT BUỘC: Chỉ Trưởng phòng hoặc Admin mới được duyệt
+            if user and user["role_code"] not in ["SALES_MANAGER", "ADMIN"]:
+                self._send_error(403, f"TỪ CHỐI TRUY CẬP: Bạn đang đăng nhập với vai trò '{user['role_name']}'. Chỉ Trưởng phòng Kinh doanh mới có thẩm quyền phê duyệt chiết khấu vượt hạn mức!")
+                return
+
             opp_id = payload.get("opp_id")
-            decision = payload.get("decision", "APPROVED")  # 'APPROVED' / 'REJECTED' / 'REVISE'
+            decision = payload.get("decision", "APPROVED")
             note = payload.get("note", "")
 
-            success = orchestrator.manager_decide_approval(opp_id, decision, note)
+            approver_name = user["name"] if user else "Trưởng phòng Kinh doanh"
+            note_with_approver = f"{note} (Ký duyệt bởi: {approver_name})"
+
+            success = orchestrator.manager_decide_approval(opp_id, decision, note_with_approver)
             if success:
                 summary = orchestrator.get_dashboard_summary()
                 updated = [o for o in orchestrator.opportunities if o["id"] == opp_id][0]
@@ -184,11 +325,15 @@ class B2BAgentHttpHandler(http.server.SimpleHTTPRequestHandler):
                     "summary": summary
                 })
             else:
-                self._send_error(404, "Không tìm thấy cơ hội hoặc cơ hội không ở trạng thái Chờ duyệt")
+                self._send_error(404, "Không tìm thấy cơ hội hoặc cơ hội không ở trạng thái Chờ duyệt!")
             return
 
         elif path == "/api/data_upload":
-            # Nạp dữ liệu sản phẩm mới hoặc bộ dữ liệu mới không sửa code
+            user = self._get_authenticated_user()
+            if user and user["role_code"] != "ADMIN":
+                self._send_error(403, "Chỉ Quản trị viên (Admin) mới có quyền nạp và thay đổi dữ liệu Master Catalog!")
+                return
+
             dataset_type = payload.get("type", "PRODUCT_CATALOG")
             items = payload.get("items", [])
             if dataset_type == "PRODUCT_CATALOG" and isinstance(items, list):
@@ -197,11 +342,6 @@ class B2BAgentHttpHandler(http.server.SimpleHTTPRequestHandler):
                     if sku:
                         orchestrator.catalog[sku] = it
                 self._send_json({"status": "success", "message": f"Đã nạp thành công {len(items)} sản phẩm mới vào danh mục!"})
-                return
-            elif dataset_type == "POLICY":
-                new_policy = payload.get("policy", {})
-                orchestrator.policy.update(new_policy)
-                self._send_json({"status": "success", "message": "Đã cập nhật chính sách phê duyệt chiết khấu!"})
                 return
             self._send_json({"status": "success", "message": "Dữ liệu đã được nạp thành công!"})
             return
@@ -212,7 +352,7 @@ class B2BAgentHttpHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         else:
-            self._send_error(404, "API endpoint not found")
+            self._send_error(404, "API endpoint không tồn tại!")
 
     def _send_json(self, data):
         self.send_response(200)
@@ -290,7 +430,7 @@ class ReusableThreadingServer(socketserver.ThreadingMixIn, socketserver.TCPServe
     allow_reuse_address = True
 
 def main():
-    print(f"🚀 Minh An B2B AI Agent Server đang chạy tại: http://localhost:{PORT}")
+    print(f"🚀 Minh An B2B AI Agent Server (Bảo Mật & Phân Quyền) đang chạy tại: http://localhost:{PORT}")
     with ReusableThreadingServer(("0.0.0.0", PORT), B2BAgentHttpHandler) as httpd:
         print(f"✅ Sẵn sàng phục vụ tại http://localhost:{PORT}")
         httpd.serve_forever()

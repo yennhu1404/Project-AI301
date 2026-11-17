@@ -1,10 +1,11 @@
 /**
  * MINH AN COMPANY - B2B AI AGENT SYSTEM
- * Multi-Page SaaS Router & Business Controller
+ * Role-Based Access Control (RBAC) & Secure Multi-Page SaaS Router
  * Author: Lê Yến Như
  */
 
 let currentUser = null;
+let currentToken = null;
 let allOpportunities = [];
 let masterCatalog = {};
 let saasChartInstance = null;
@@ -51,18 +52,19 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function initSystem() {
-  // Check stored auth session
   const storedUser = localStorage.getItem('minhan_user');
-  if (storedUser) {
+  const storedToken = localStorage.getItem('minhan_token');
+
+  if (storedUser && storedToken) {
     try {
       currentUser = JSON.parse(storedUser);
+      currentToken = storedToken;
       applyUserInfoToUi(currentUser);
     } catch (e) {
-      localStorage.removeItem('minhan_user');
+      clearSession();
     }
   }
 
-  // Handle URL hash routing
   const hash = window.location.hash.replace('#', '');
   if (hash === 'login') {
     navigateTo('login');
@@ -74,15 +76,22 @@ async function initSystem() {
     navigateTo('landing');
   }
 
-  // Preload initial backend data
   await loadBackendData();
+}
+
+function getAuthHeaders() {
+  const headers = { 'Content-Type': 'application/json' };
+  if (currentToken) {
+    headers['Authorization'] = `Bearer ${currentToken}`;
+  }
+  return headers;
 }
 
 async function loadBackendData() {
   try {
     const [oppsRes, catRes] = await Promise.all([
-      fetch('/api/opportunities'),
-      fetch('/api/catalog')
+      fetch('/api/opportunities', { headers: getAuthHeaders() }),
+      fetch('/api/catalog', { headers: getAuthHeaders() })
     ]);
 
     const oppsData = await oppsRes.json();
@@ -119,12 +128,13 @@ function navigateTo(targetView) {
     window.scrollTo(0, 0);
   } else if (targetView === 'app') {
     if (!currentUser) {
-      alert('Vui lòng đăng nhập để truy cập hệ thống nội bộ!');
+      alert('🔒 BẢO MẬT: Bạn chưa đăng nhập. Vui lòng đăng nhập trước khi vào hệ thống nội bộ!');
       navigateTo('login');
       return;
     }
     appView.style.display = 'block';
     window.location.hash = 'app';
+    applyRoleBasedAccess(currentUser);
   } else {
     landingView.style.display = 'block';
     window.location.hash = 'landing';
@@ -145,21 +155,27 @@ function openSaasPage(pageId) {
     return;
   }
 
-  // Hide all pages
+  // Phân quyền bảo vệ từng trang (RBAC Route Guard)
+  if (pageId === 'page-approval' && currentUser.role_code === 'SALES_REP') {
+    alert('🚫 TỪ CHỐI TRUY CẬP: Chuyên viên kinh doanh không có quyền xem Hộp thư phê duyệt chiết khấu. Chức năng này chỉ dành cho Trưởng phòng Kinh doanh!');
+    return;
+  }
+  if (pageId === 'page-data' && currentUser.role_code === 'CUSTOMER') {
+    alert('🚫 TỪ CHỐI TRUY CẬP: Khách hàng không có quyền truy cập vào Kho dữ liệu nội bộ!');
+    return;
+  }
+
   document.querySelectorAll('.saas-page').forEach(p => p.classList.remove('active'));
 
-  // Show target page
   const target = document.getElementById(pageId);
   if (target) {
     target.classList.add('active');
   }
 
-  // Update sidebar active link
   document.querySelectorAll('.sidebar-menu .menu-link').forEach(link => {
     link.classList.toggle('active', link.getAttribute('data-page') === pageId);
   });
 
-  // Update breadcrumb
   const breadcrumbMap = {
     'page-dashboard': 'Tổng quan',
     'page-ingestion': 'Tiếp nhận yêu cầu',
@@ -184,13 +200,22 @@ function openSaasPage(pageId) {
 }
 
 // ==========================================
-// AUTHENTICATION & LOGIN LOGIC
+// AUTHENTICATION & LOGIN LOGIC (STRICT)
 // ==========================================
 async function handleLoginSubmit(e) {
   e.preventDefault();
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value.trim();
   const errorBox = document.getElementById('loginErrorAlert');
+
+  errorBox.style.display = 'none';
+
+  // 1. Kiểm tra validation phía client
+  if (!email || !password) {
+    errorBox.textContent = 'Vui lòng nhập đầy đủ Email và Mật khẩu!';
+    errorBox.style.display = 'block';
+    return;
+  }
 
   try {
     const res = await fetch('/api/login', {
@@ -200,20 +225,27 @@ async function handleLoginSubmit(e) {
     });
 
     const data = await res.json();
-    if (data.status === 'success') {
+    if (res.ok && data.status === 'success') {
       currentUser = data.user;
+      currentToken = data.token;
       localStorage.setItem('minhan_user', JSON.stringify(currentUser));
+      localStorage.setItem('minhan_token', currentToken);
+
       applyUserInfoToUi(currentUser);
       errorBox.style.display = 'none';
+
+      // Load lại dữ liệu theo phân quyền của người dùng vừa đăng nhập
+      await loadBackendData();
 
       navigateTo('app');
       openSaasPage('page-dashboard');
     } else {
-      errorBox.textContent = data.error || 'Thông tin đăng nhập không hợp lệ!';
+      // Hiển thị lỗi xác thực chính xác
+      errorBox.innerHTML = `<b>Lỗi xác thực:</b> ${data.error || 'Email hoặc mật khẩu không chính xác!'}`;
       errorBox.style.display = 'block';
     }
   } catch (err) {
-    errorBox.textContent = 'Lỗi kết nối máy chủ.';
+    errorBox.innerHTML = '<b>Lỗi hệ thống:</b> Không thể kết nối tới máy chủ xác thực!';
     errorBox.style.display = 'block';
   }
 }
@@ -221,6 +253,7 @@ async function handleLoginSubmit(e) {
 function fillDemoAccount(email, pwd) {
   document.getElementById('loginEmail').value = email;
   document.getElementById('loginPassword').value = pwd;
+  document.getElementById('loginErrorAlert').style.display = 'none';
 }
 
 function togglePasswordVisibility() {
@@ -229,11 +262,24 @@ function togglePasswordVisibility() {
 }
 
 function handleLogout() {
-  if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?')) {
-    currentUser = null;
-    localStorage.removeItem('minhan_user');
+  if (confirm(`Bạn có chắc chắn muốn đăng xuất tài khoản [${currentUser ? currentUser.name : ''}]?`)) {
+    if (currentToken) {
+      fetch('/api/logout', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ token: currentToken })
+      }).catch(() => {});
+    }
+    clearSession();
     navigateTo('landing');
   }
+}
+
+function clearSession() {
+  currentUser = null;
+  currentToken = null;
+  localStorage.removeItem('minhan_user');
+  localStorage.removeItem('minhan_token');
 }
 
 function applyUserInfoToUi(user) {
@@ -242,9 +288,50 @@ function applyUserInfoToUi(user) {
   const roleEl = document.getElementById('sidebarUserRole');
   const avatarEl = document.getElementById('sidebarUserAvatar');
 
-  if (nameEl) nameEl.textContent = user.name || 'Lê Yến Như';
-  if (roleEl) roleEl.textContent = user.role || 'Quản trị viên';
+  if (nameEl) nameEl.textContent = user.name || 'Người dùng';
+  if (roleEl) roleEl.textContent = user.role_name || user.role_code;
   if (avatarEl && user.avatar) avatarEl.src = user.avatar;
+}
+
+// Áp dụng giao diện và phân quyền theo đúng vai trò thực tế
+function applyRoleBasedAccess(user) {
+  if (!user) return;
+
+  const bannerIcon = document.getElementById('roleGreetingIcon');
+  const bannerTitle = document.getElementById('roleGreetingTitle');
+  const bannerDesc = document.getElementById('roleGreetingDesc');
+  const bannerBadge = document.getElementById('roleGreetingBadge');
+  const dashHeaderTitle = document.getElementById('dashRoleHeaderTitle');
+
+  if (user.role_code === 'ADMIN') {
+    bannerIcon.textContent = '👑';
+    bannerTitle.textContent = `Bàn Làm Việc Quản Trị Viên: ${user.name}`;
+    bannerDesc.textContent = `Bạn có toàn quyền quản trị hệ thống, dữ liệu Master Catalog và cấu hình AI Agent.`;
+    bannerBadge.textContent = 'Quyền Toàn Cục (Admin)';
+    bannerBadge.className = 'badge-tag eligible';
+    dashHeaderTitle.textContent = 'Bảng Điều Khiển Tổng Quan Doanh Nghiệp';
+  } else if (user.role_code === 'SALES_MANAGER') {
+    bannerIcon.textContent = '👔';
+    bannerTitle.textContent = `Bàn Làm Việc Trưởng Phòng Kinh Doanh: ${user.name}`;
+    bannerDesc.textContent = `Bạn có quyền phê duyệt các cơ hội chiết khấu vượt hạn mức (>5%) và theo dõi toàn bộ cơ hội kinh doanh.`;
+    bannerBadge.textContent = 'Thẩm Quyền Phê Duyệt';
+    bannerBadge.className = 'badge-tag pending';
+    dashHeaderTitle.textContent = 'Bảng Điều Khiển Phê Duyệt & Quản Lý Đội Ngũ Sales';
+  } else if (user.role_code === 'SALES_REP') {
+    bannerIcon.textContent = '💼';
+    bannerTitle.textContent = `Bàn Làm Việc Chuyên Viên Kinh Doanh: ${user.name}`;
+    bannerDesc.textContent = `Bạn phụ trách tiếp nhận yêu cầu, lập dự thảo báo giá (chiết khấu tối đa 5%) và theo dõi hồ sơ được phân công.`;
+    bannerBadge.textContent = 'Chuyên Viên Sales (Hạn mức <= 5%)';
+    bannerBadge.className = 'badge-tag missing';
+    dashHeaderTitle.textContent = 'Bảng Theo Dõi Cơ Hội Bán Hàng Cá Nhân';
+  } else if (user.role_code === 'CUSTOMER') {
+    bannerIcon.textContent = '🏢';
+    bannerTitle.textContent = `Cổng Dịch Vụ Khách Hàng: ${user.name}`;
+    bannerDesc.textContent = `Bạn có thể gửi yêu cầu báo giá mới, theo dõi tiến độ xử lý và xem các đề xuất thương mại từ Minh An.`;
+    bannerBadge.textContent = 'Khách Hàng Doanh Nghiệp';
+    bannerBadge.className = 'badge-tag eligible';
+    dashHeaderTitle.textContent = 'Theo Dõi Đơn Hàng & Yêu Cầu Của DigiTech';
+  }
 }
 
 // ==========================================
@@ -265,7 +352,6 @@ function renderDashboardData(summary, opps) {
   document.getElementById('sidebarOppCount').textContent = opps.length;
   document.getElementById('sidebarPendingCount').textContent = summary.pending_approval.count;
 
-  // Render recent table
   const tbody = document.getElementById('dashTableBody');
   tbody.innerHTML = opps.slice(0, 5).map(o => `
     <tr>
@@ -283,7 +369,6 @@ function renderDashboardData(summary, opps) {
     </tr>
   `).join('');
 
-  // Render Chart
   renderSaasChart(summary);
   renderAllOpportunitiesTable(opps);
 }
@@ -348,7 +433,7 @@ async function runIngestToParsing() {
   try {
     const res = await fetch('/api/process_request', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ raw_text: rawText, source: 'Giao diện tiếp nhận SaaS' })
     });
 
@@ -357,11 +442,9 @@ async function runIngestToParsing() {
       currentProcessingOpp = data.opportunity;
       allOpportunities.unshift(currentProcessingOpp);
 
-      // Render split view in Page 5
       renderParsingSplitView(currentProcessingOpp);
       openSaasPage('page-parsing');
 
-      // Refresh background datasets
       renderDashboardData(data.summary, allOpportunities);
       renderApprovalInbox(allOpportunities);
     } else {
@@ -555,6 +638,9 @@ function renderApprovalInbox(opps) {
     return;
   }
 
+  // Kiểm tra quyền phê duyệt
+  const canApprove = currentUser && (currentUser.role_code === 'SALES_MANAGER' || currentUser.role_code === 'ADMIN');
+
   container.innerHTML = pendingOpps.map(o => `
     <div class="saas-card" style="border-left:4px solid #8b5cf6;">
       <div class="saas-card-title-row">
@@ -574,10 +660,11 @@ function renderApprovalInbox(opps) {
         </div>
         <div>
           <div><b>Lý do chuyển duyệt:</b> <span style="color:#6b21a8; font-weight:600;">${o.pricing.approval_reason}</span></div>
-          <div><b>Căn cứ dữ liệu:</b> Kho đủ tồn, khách hàng cam kết thanh toán ngay.</div>
+          <div><b>Căn cứ dữ liệu:</b> Kho đủ tồn khả dụng, hợp đồng thanh toán ngay.</div>
         </div>
       </div>
 
+      ${canApprove ? `
       <div style="display:flex; align-items:center; gap:10px; padding-top:12px; border-top:1px dashed #e2e8f0;">
         <button class="btn-primary-action" style="background:#16a34a;" onclick="submitManagerDecision('${o.id}', 'APPROVED')">
           <span>✓ Phê Duyệt Chiết Khấu</span>
@@ -589,23 +676,33 @@ function renderApprovalInbox(opps) {
           <span>✏️ Yêu Cầu Chỉnh Sửa</span>
         </button>
       </div>
+      ` : `
+      <div style="padding:10px 14px; background:#fff1f2; border:1px solid #fecdd3; border-radius:8px; font-size:12px; color:#be123c;">
+        🔒 <b>Quyền hạn chế:</b> Bạn đang đăng nhập với vai trò <b>${currentUser.role_name}</b>. Bạn chỉ được xem phiếu duyệt này, quyền bấm Duyệt/Từ chối thuộc về Trưởng phòng Kinh doanh (Lê Văn Tuấn).
+      </div>
+      `}
     </div>
   `).join('');
 }
 
 async function submitManagerDecision(oppId, decision) {
+  if (!currentUser || (currentUser.role_code !== 'SALES_MANAGER' && currentUser.role_code !== 'ADMIN')) {
+    alert('🚫 Bạn không có thẩm quyền phê duyệt chiết khấu. Chỉ Trưởng phòng Kinh doanh mới được phê duyệt!');
+    return;
+  }
+
   const note = prompt(decision === 'APPROVED' ? 'Ghi chú phê duyệt của Trưởng phòng:' : 'Lý do từ chối hoặc yêu cầu sửa:');
   if (note === null) return;
 
   try {
     const res = await fetch('/api/approve', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ opp_id: oppId, decision, note })
     });
 
     const data = await res.json();
-    if (data.status === 'success') {
+    if (res.ok && data.status === 'success') {
       alert(`Đã lưu quyết định: [${decision}] cho cơ hội ${oppId}!`);
       const idx = allOpportunities.findIndex(o => o.id === oppId);
       if (idx !== -1) {
@@ -616,7 +713,7 @@ async function submitManagerDecision(oppId, decision) {
       renderAllOpportunitiesTable(allOpportunities);
       renderReportsTable(data.summary, allOpportunities);
     } else {
-      alert('Lỗi: ' + data.error);
+      alert('Lỗi: ' + (data.error || 'Không thể thực hiện phê duyệt!'));
     }
   } catch (err) {
     alert('Lỗi kết nối máy chủ');
@@ -665,7 +762,7 @@ function renderReportsTable(summary, opps) {
 
 async function loadAuditLogs() {
   try {
-    const res = await fetch('/api/audit_logs');
+    const res = await fetch('/api/audit_logs', { headers: getAuthHeaders() });
     const logs = await res.json();
     const tbody = document.getElementById('auditLogPageTbody');
     if (!tbody) return;
@@ -690,6 +787,11 @@ async function loadAuditLogs() {
 // PAGE 12: DATA MANAGEMENT
 // ==========================================
 async function handleUploadNewData() {
+  if (currentUser && currentUser.role_code !== 'ADMIN') {
+    alert('🚫 Chỉ Quản trị viên (Admin) mới có quyền nạp dữ liệu Master Catalog!');
+    return;
+  }
+
   const text = document.getElementById('newDataTextarea').value.trim();
   if (!text) {
     alert('Vui lòng nhập định dạng JSON dữ liệu sản phẩm!');
@@ -700,7 +802,7 @@ async function handleUploadNewData() {
     const parsed = JSON.parse(text);
     const res = await fetch('/api/data_upload', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ type: 'PRODUCT_CATALOG', items: parsed })
     });
     const data = await res.json();
