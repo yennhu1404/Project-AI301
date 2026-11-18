@@ -22,7 +22,20 @@ class B2BOpportunityOrchestrator:
                 self._all_aliases.append((len(alias), alias.lower(), sku, pdata))
         self._all_aliases.sort(key=lambda x: x[0], reverse=True)
         
+        # Khởi tạo mặc định ở trạng thái DỮ LIỆU TRỐNG (Zero-state)
+        # self._init_default_opportunities()
+
+    def reset_to_empty(self):
+        """Làm sạch toàn bộ cơ hội bán hàng và nhật ký audit về trạng thái trống ban đầu."""
+        self.opportunities = []
+        self.audit_logs = []
+        return True
+
+    def seed_demo_opportunities(self):
+        """Nạp lại 4 test case mẫu khi cần trình diễn/demo."""
+        self.reset_to_empty()
         self._init_default_opportunities()
+        return len(self.opportunities)
 
     def _log_audit(self, opp_id, step_name, agent_skill, action, input_data, output_data, rule_applied=None, human_intervention=False):
         log_entry = {

@@ -168,6 +168,28 @@ class B2BAgentHttpHandler(http.server.SimpleHTTPRequestHandler):
             self._send_json(orchestrator.audit_logs)
             return
 
+        elif path in ["/api/clear_data", "/api/reset_data"]:
+            orchestrator.reset_to_empty()
+            summary = orchestrator.get_dashboard_summary()
+            self._send_json({
+                "status": "success",
+                "message": "Hệ thống đã được chuyển về trạng thái dữ liệu trống!",
+                "summary": summary,
+                "opportunities": orchestrator.opportunities
+            })
+            return
+
+        elif path == "/api/seed_demo_data":
+            count = orchestrator.seed_demo_opportunities()
+            summary = orchestrator.get_dashboard_summary()
+            self._send_json({
+                "status": "success",
+                "message": f"Đã nạp {count} Test Case mẫu!",
+                "summary": summary,
+                "opportunities": orchestrator.opportunities
+            })
+            return
+
         elif path.startswith("/api/opportunity/"):
             opp_id = path.split("/")[-1]
             found = [o for o in orchestrator.opportunities if o["id"] == opp_id]
@@ -475,9 +497,26 @@ class B2BAgentHttpHandler(http.server.SimpleHTTPRequestHandler):
             self._send_json({"status": "success", "message": "Dữ liệu đã được nạp thành công!"})
             return
 
-        elif path == "/api/reset_demo":
-            orchestrator.__init__()
-            self._send_json({"status": "reset_complete", "opportunities": orchestrator.opportunities})
+        elif path in ["/api/reset_demo", "/api/clear_data", "/api/reset_data"]:
+            orchestrator.reset_to_empty()
+            summary = orchestrator.get_dashboard_summary()
+            self._send_json({
+                "status": "success",
+                "message": "Đã làm sạch toàn bộ dữ liệu cơ hội và đưa hệ thống về trạng thái trống (Zero-state) thành công!",
+                "summary": summary,
+                "opportunities": orchestrator.opportunities
+            })
+            return
+
+        elif path == "/api/seed_demo_data":
+            count = orchestrator.seed_demo_opportunities()
+            summary = orchestrator.get_dashboard_summary()
+            self._send_json({
+                "status": "success",
+                "message": f"Đã nạp thành công {count} Test Case mẫu vào hệ thống!",
+                "summary": summary,
+                "opportunities": orchestrator.opportunities
+            })
             return
 
         else:

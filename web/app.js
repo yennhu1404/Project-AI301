@@ -631,21 +631,37 @@ function renderDashboardData(summary, opps) {
   document.getElementById('sidebarPendingCount').textContent = summary.pending_approval.count;
 
   const tbody = document.getElementById('dashTableBody');
-  tbody.innerHTML = opps.slice(0, 5).map(o => `
-    <tr>
-      <td><b>${o.id}</b></td>
-      <td>
-        <div style="font-weight:700;">${o.customer_name}</div>
-        <small style="color:#64748b;">${o.contact_person}</small>
-      </td>
-      <td><span class="badge-tag ${getBadgeStyle(o.status)}">${o.status}</span></td>
-      <td style="font-weight:700;">${o.pricing.total_after_discount > 0 ? formatCurrency(o.pricing.total_after_discount) : 'Chưa xác định'}</td>
-      <td>${o.sales_rep ? o.sales_rep.name : 'N/A'}</td>
-      <td>
-        <button class="btn-secondary-tool" onclick="inspectOpportunity('${o.id}')">Xem hồ sơ &rarr;</button>
-      </td>
-    </tr>
-  `).join('');
+  if (opps.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align:center; padding: 45px 20px; color:#64748b;">
+          <div style="font-size:36px; margin-bottom:8px;">📭</div>
+          <div style="font-size:15px; font-weight:800; color:#1e293b;">Dữ liệu hiện đang trống (Zero-state)</div>
+          <p style="font-size:13px; color:#64748b; margin:6px 0 16px 0;">Chưa có cơ hội kinh doanh nào trong hệ thống. Hãy nạp yêu cầu mới để AI Agent phân tích.</p>
+          <div style="display:inline-flex; gap:10px;">
+            <button class="btn-primary-action" onclick="openSaasPage('page-ingestion')">➕ Tạo Yêu Cầu Mới</button>
+            <button class="btn-secondary-tool" onclick="handleSeedDemoData()">⚡ Nạp 4 Test Case Mẫu</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  } else {
+    tbody.innerHTML = opps.slice(0, 5).map(o => `
+      <tr>
+        <td><b>${o.id}</b></td>
+        <td>
+          <div style="font-weight:700;">${o.customer_name}</div>
+          <small style="color:#64748b;">${o.contact_person}</small>
+        </td>
+        <td><span class="badge-tag ${getBadgeStyle(o.status)}">${o.status}</span></td>
+        <td style="font-weight:700;">${o.pricing.total_after_discount > 0 ? formatCurrency(o.pricing.total_after_discount) : 'Chưa xác định'}</td>
+        <td>${o.sales_rep ? o.sales_rep.name : 'N/A'}</td>
+        <td>
+          <button class="btn-secondary-tool" onclick="inspectOpportunity('${o.id}')">Xem hồ sơ &rarr;</button>
+        </td>
+      </tr>
+    `).join('');
+  }
 
   renderSaasChart(summary);
   renderAllOpportunitiesTable(opps);
@@ -657,6 +673,31 @@ function renderSaasChart(summary) {
 
   if (saasChartInstance) {
     saasChartInstance.destroy();
+  }
+
+  const total = (summary.eligible.count || 0) + (summary.pending_approval.count || 0) + (summary.missing_info.count || 0) + (summary.unfulfilled.count || 0);
+
+  if (total === 0) {
+    saasChartInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Chưa có dữ liệu (0 cơ hội)'],
+        datasets: [{
+          data: [1],
+          backgroundColor: ['#e2e8f0'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11, weight: '600' } } }
+        },
+        cutout: '70%'
+      }
+    });
+    return;
   }
 
   saasChartInstance = new Chart(ctx, {
@@ -902,6 +943,20 @@ function renderParsingSplitView(opp) {
 function renderAllOpportunitiesTable(opps) {
   const tbody = document.getElementById('allOppsTableBody');
   if (!tbody) return;
+
+  if (!opps || opps.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align:center; padding: 48px 20px; color:#64748b;">
+          <div style="font-size:36px; margin-bottom:10px;">📊</div>
+          <div style="font-size:15px; font-weight:700; color:#1e293b;">Danh sách cơ hội kinh doanh đang trống</div>
+          <p style="font-size:13px; color:#64748b; margin:6px 0 16px 0;">Hãy vào mục "Tiếp nhận yêu cầu" để đưa dữ liệu vào cho AI Agent xử lý.</p>
+          <button class="btn-primary-action" onclick="openSaasPage('page-ingestion')">➕ Tiếp Nhận Yêu Cầu Đầu Tiên</button>
+        </td>
+      </tr>
+    `;
+    return;
+  }
 
   tbody.innerHTML = opps.map(o => `
     <tr>
@@ -1553,6 +1608,19 @@ async function loadAuditLogs() {
     const tbody = document.getElementById('auditLogPageTbody');
     if (!tbody) return;
 
+    if (!logs || logs.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align:center; padding: 40px 20px; color:#64748b;">
+            <div style="font-size:30px; margin-bottom:8px;">📋</div>
+            <div style="font-weight:700; color:#1e293b;">Nhật ký thực thi AI Agent đang trống</div>
+            <small style="color:#64748b;">Mọi thao tác phân tích, bóc tách và đối chiếu sẽ được ghi vết tự động tại đây khi có yêu cầu phát sinh.</small>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
     tbody.innerHTML = logs.map(l => `
       <tr>
         <td style="font-family:monospace; font-size:11px;">${l.timestamp}</td>
@@ -1602,6 +1670,50 @@ async function handleUploadNewData() {
 // ==========================================
 // EXPORTS & HELPERS
 // ==========================================
+// ==========================================
+// DATA RESET & SEED CONTROLLERS (ZERO-STATE)
+// ==========================================
+async function handleClearAllData() {
+  if (!confirm('Bạn có chắc chắn muốn làm sạch toàn bộ dữ liệu cơ hội và đưa hệ thống về trạng thái TRỐNG (Zero-state)?')) {
+    return;
+  }
+  try {
+    const res = await fetch('/api/clear_data', { method: 'POST', headers: getAuthHeaders() });
+    const data = await res.json();
+    if (res.ok) {
+      allOpportunities = [];
+      currentProcessingOpp = null;
+      renderDashboardData(data.summary, allOpportunities);
+      renderAllOpportunitiesTable(allOpportunities);
+      renderApprovalInbox(allOpportunities);
+      renderReportsTable(data.summary, allOpportunities);
+      loadAuditLogs();
+      alert('Đã chuyển toàn bộ hệ thống về trạng thái DỮ LIỆU TRỐNG thành công!');
+    }
+  } catch (err) {
+    alert('Lỗi kết nối máy chủ!');
+  }
+}
+
+async function handleSeedDemoData() {
+  try {
+    const res = await fetch('/api/seed_demo_data', { method: 'POST', headers: getAuthHeaders() });
+    const data = await res.json();
+    if (res.ok) {
+      allOpportunities = data.opportunities || [];
+      if (allOpportunities.length > 0) currentProcessingOpp = allOpportunities[0];
+      renderDashboardData(data.summary, allOpportunities);
+      renderAllOpportunitiesTable(allOpportunities);
+      renderApprovalInbox(allOpportunities);
+      renderReportsTable(data.summary, allOpportunities);
+      loadAuditLogs();
+      alert('Đã nạp 4 Test Case mẫu thành công!');
+    }
+  } catch (err) {
+    alert('Lỗi kết nối máy chủ!');
+  }
+}
+
 function exportWordReport() {
   window.open('/api/export/word', '_blank');
 }
