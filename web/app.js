@@ -192,7 +192,10 @@ function openSaasPage(pageId) {
 
   document.getElementById('breadcrumbCurrentPage').textContent = breadcrumbMap[pageId] || 'Hệ thống';
   window.location.hash = `app/${pageId}`;
-  window.scrollTo(0, 0);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // Update Guided Flow Bar
+  updateGuidedFlowBar(pageId);
 
   if (pageId === 'page-validation') {
     if (!currentProcessingOpp && allOpportunities.length > 0) {
@@ -211,6 +214,70 @@ function openSaasPage(pageId) {
   if (pageId === 'page-audit') {
     loadAuditLogs();
   }
+}
+
+function updateGuidedFlowBar(pageId) {
+  const bar = document.getElementById('guidedFlowBar');
+  const titleEl = document.getElementById('guidedFlowStepName');
+  const labelEl = document.getElementById('btnNextGuidedStepLabel');
+  if (!bar) return;
+
+  const guidedSteps = ['page-ingestion', 'page-parsing', 'page-validation', 'page-pricing', 'page-approval'];
+  if (guidedSteps.includes(pageId)) {
+    bar.style.display = 'flex';
+  } else {
+    bar.style.display = 'none';
+    return;
+  }
+
+  switch (pageId) {
+    case 'page-ingestion':
+      titleEl.innerHTML = '<b>Bước 1:</b> Tiếp Nhận Yêu Cầu & Nạp Dữ Liệu';
+      labelEl.innerHTML = '⚡ Phân Tích Bằng AI ➔ Tự Động Nhảy Sang Bóc Tách &rarr;';
+      break;
+    case 'page-parsing':
+      titleEl.innerHTML = '<b>Bước 2:</b> Phân Tích Thực Thể <span class="badge-tag pending">Checkpoint 1</span>';
+      labelEl.innerHTML = '✓ Xác Nhận Bóc Tách ➔ Tự Động Nhảy Sang Thẩm Định Kho &rarr;';
+      break;
+    case 'page-validation':
+      titleEl.innerHTML = '<b>Bước 3:</b> Thẩm Định Tồn Kho & Bảng Giá <span class="badge-tag pending">Checkpoint 1.2</span>';
+      labelEl.innerHTML = '✓ Xác Nhận Đủ Kho & Giữ Hàng ➔ Tự Động Nhảy Sang Báo Giá &rarr;';
+      break;
+    case 'page-pricing':
+      titleEl.innerHTML = '<b>Bước 4:</b> Báo Giá & Ma Trận Chiết Khấu <span class="badge-tag pending">Checkpoint 1.3</span>';
+      labelEl.innerHTML = '📤 Xác Nhận Lập Phiếu ➔ Tự Động Nhảy Sang Phê Duyệt &rarr;';
+      break;
+    case 'page-approval':
+      titleEl.innerHTML = '<b>Bước 5:</b> Hộp Thư Phê Duyệt Của Cấp Quản Lý <span class="badge-tag pending">Checkpoint 2</span>';
+      labelEl.innerHTML = '✓ Trưởng Phòng Phê Duyệt Chiết Khấu ➔ Hoàn Tất Đơn Hàng &rarr;';
+      break;
+  }
+}
+
+function executeCurrentGuidedStep() {
+  const activePage = document.querySelector('.saas-page.active');
+  const pageId = activePage ? activePage.id : '';
+
+  if (pageId === 'page-ingestion') {
+    runIngestToParsing();
+  } else if (pageId === 'page-parsing') {
+    confirmParsingCheckpoint();
+  } else if (pageId === 'page-validation') {
+    confirmInventoryAndProceed();
+  } else if (pageId === 'page-pricing') {
+    submitPricingConfirmation();
+  } else if (pageId === 'page-approval') {
+    const pendingOpps = allOpportunities.filter(o => o.status === 'Chờ duyệt');
+    const targetId = pendingOpps.length > 0 ? pendingOpps[0].id : (currentProcessingOpp ? currentProcessingOpp.id : (allOpportunities.length > 0 ? allOpportunities[0].id : null));
+    if (targetId) {
+      openManagerApprovalModal(targetId, 'APPROVED');
+    } else {
+      showStepTransitionToast('Hộp thư đã sạch sẽ, toàn bộ đơn đều đã được duyệt!', 'info', 2000);
+    }
+  } else {
+    openSaasPage('page-ingestion');
+  }
+}
 }
 
 // ==========================================
@@ -709,11 +776,13 @@ async function runIngestAutoToApproval(customFileName) {
 }
 
 async function runIngestToParsing() {
-  const rawText = document.getElementById('pageIngestTextarea').value.trim();
+  let rawText = document.getElementById('pageIngestTextarea').value.trim();
   if (!rawText) {
-    alert('Vui lòng nhập nội dung yêu cầu khách hàng.');
-    return;
+    rawText = TEST_CASES_SAMPLES[3];
+    document.getElementById('pageIngestTextarea').value = rawText;
   }
+
+  showStepTransitionToast('🤖 AI Agent đang bóc tách thực thể... Chuyển sang Bước 2.', 'info', 2000);
 
   try {
     const res = await fetch('/api/process_request', {
@@ -732,10 +801,15 @@ async function runIngestToParsing() {
 
       renderDashboardData(data.summary, allOpportunities);
       renderApprovalInbox(allOpportunities);
+      showStepTransitionToast(`✓ Bóc tách thành công cơ hội ${currentProcessingOpp.id}! Vui lòng bấm Xác nhận để chuyển tiếp.`, 'success', 2500);
     } else {
       alert('Lỗi: ' + (data.error || 'Không thể xử lý'));
     }
   } catch (err) {
+    console.error(err);
+    alert('Lỗi kết nối máy chủ');
+  }
+}
     console.error(err);
     alert('Lỗi kết nối máy chủ');
   }

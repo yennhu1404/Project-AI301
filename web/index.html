@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/style.css?v=hitl_auto_flow_v2">
+  <link rel="stylesheet" href="/style.css?v=guided_flow_v3">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -491,6 +491,24 @@
 
         <!-- Dynamic Page Container -->
         <main class="saas-view-container">
+
+          <!-- Guided Automated Workflow Bar (Tự Động Hóa Có Xác Nhận) -->
+          <div class="guided-flow-bar" id="guidedFlowBar" style="display:none;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span class="pulse-indicator"></span>
+              <div>
+                <div style="font-size:11.5px; font-weight:800; color:#b45309; text-transform:uppercase; letter-spacing:0.5px;">LUỒNG TỰ ĐỘNG HÓA 5 BƯỚC (HUMAN-IN-THE-LOOP)</div>
+                <div id="guidedFlowStepName" style="font-size:14px; font-weight:800; color:#1e293b; margin-top:2px;">
+                  Đang ở Bước 1: Tiếp nhận yêu cầu
+                </div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <button class="btn-primary-action glow-action-btn" id="btnNextGuidedStep" onclick="executeCurrentGuidedStep()">
+                <span id="btnNextGuidedStepLabel">⚡ Bắt Đầu Xử Lý & Xác Nhận Bóc Tách ➔</span>
+              </button>
+            </div>
+          </div>
 
           <!-- -------------------------------------------------------------
                PAGE 3: DASHBOARD - TỔNG QUAN
@@ -1529,6 +1547,6 @@
     </div>
   </div>
 
-  <script src="/app.js?v=hitl_auto_flow_v2"></script>
+  <script src="/app.js?v=guided_flow_v3"></script>
 </body>
 </html>
