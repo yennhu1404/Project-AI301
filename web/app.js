@@ -135,6 +135,9 @@ function navigateTo(targetView) {
     appView.style.display = 'block';
     window.location.hash = 'app';
     applyRoleBasedAccess(currentUser);
+    setTimeout(() => {
+      openWelcomeAgentModal();
+    }, 200);
   } else {
     landingView.style.display = 'block';
     window.location.hash = 'landing';
@@ -486,6 +489,9 @@ async function handleLoginSubmit(e) {
 
       navigateTo('app');
       openSaasPage('page-dashboard');
+      setTimeout(() => {
+        openWelcomeAgentModal(true);
+      }, 300);
     } else {
       // Hiển thị lỗi xác thực chính xác
       errorBox.innerHTML = `<b>Lỗi xác thực:</b> ${data.error || 'Email hoặc mật khẩu không chính xác!'}`;
@@ -1618,3 +1624,71 @@ function getBadgeStyle(status) {
     default: return 'missing';
   }
 }
+
+
+// ==========================================
+// WELCOME AI AGENT TAB / MODAL FUNCTIONS
+// ==========================================
+function handleStartExperience() {
+  if (currentUser) {
+    navigateTo('app');
+    openSaasPage('page-dashboard');
+    setTimeout(() => {
+      openWelcomeAgentModal(true);
+    }, 300);
+  } else {
+    navigateTo('login');
+  }
+}
+
+function openWelcomeAgentModal(force = false) {
+  const isSuppressed = sessionStorage.getItem('suppress_welcome_agent') === 'true';
+  if (isSuppressed && !force) {
+    return;
+  }
+
+  const modal = document.getElementById('welcomeAgentModal');
+  if (!modal) return;
+
+  const greetingEl = document.getElementById('welcomeUserGreetingText');
+  if (greetingEl) {
+    const userName = currentUser ? currentUser.name : 'Lê Yến Như';
+    const userRole = currentUser ? (currentUser.role_name || currentUser.role || 'Quản trị viên') : 'Quản trị viên (Admin)';
+    greetingEl.innerHTML = 'Xin chào <b>' + userName + '</b> (' + userRole + '), chào mừng bạn đến với Trung tâm điều phối AI Agent! Mọi kỹ năng bóc tách yêu cầu, thẩm định kho hàng, tính báo giá và hỗ trợ phê duyệt đều đã sẵn sàng hoạt động.';
+  }
+
+  modal.style.display = 'flex';
+}
+
+function closeWelcomeAgentModal() {
+  const modal = document.getElementById('welcomeAgentModal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+  const chk = document.getElementById('chkDoNotShowAgain');
+  if (chk && chk.checked) {
+    sessionStorage.setItem('suppress_welcome_agent', 'true');
+  }
+}
+
+function welcomeNavigateToStep1() {
+  closeWelcomeAgentModal();
+  openSaasPage('page-ingestion');
+}
+
+// Global modal dismiss listeners
+window.addEventListener('click', (e) => {
+  const welcomeModal = document.getElementById('welcomeAgentModal');
+  if (welcomeModal && e.target === welcomeModal) {
+    closeWelcomeAgentModal();
+  }
+});
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const welcomeModal = document.getElementById('welcomeAgentModal');
+    if (welcomeModal && welcomeModal.style.display === 'flex') {
+      closeWelcomeAgentModal();
+    }
+  }
+});

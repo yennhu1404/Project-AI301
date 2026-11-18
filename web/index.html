@@ -124,7 +124,7 @@
             </div>
 
             <div class="hero-cta-row">
-              <button class="btn-hero-cta" onclick="navigateTo('login')">
+              <button class="btn-hero-cta" onclick="handleStartExperience()">
                 <span>Bắt đầu trải nghiệm</span>
                 <span>&rarr;</span>
               </button>
@@ -474,6 +474,10 @@
               <span>🔍</span>
               <input type="text" placeholder="Tìm kiếm cơ hội, khách hàng...">
             </div>
+
+            <button class="btn-welcome-trigger" onclick="openWelcomeAgentModal(true)" title="Xem tab chào mừng AI Agent">
+              <span>👋 Chào mừng đến với AI Agent</span>
+            </button>
 
             <button class="header-icon-btn" onclick="openSaasPage('page-approval')" title="Thông báo duyệt">
               <span>🔔</span>
@@ -1543,6 +1547,109 @@
         <button class="btn-primary-action" id="apprModalSubmitBtn" onclick="confirmManagerApprovalDecision()">
           <span>✓ Xác Nhận Phê Duyệt</span>
         </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ====================================================================
+       WELCOME AI AGENT TAB / MODAL (TAB CHÀO MỪNG ĐẾN VỚI AI AGENT)
+       ==================================================================== -->
+  <div class="hitl-modal-overlay" id="welcomeAgentModal" style="display:none; z-index: 2000;">
+    <div class="welcome-agent-modal-box">
+      <!-- Decorative Gradient Header -->
+      <div class="welcome-agent-header">
+        <div class="welcome-agent-badge">
+          <span class="status-indicator-dot" style="background:#10b981;"></span>
+          <span>AI AGENT PLATFORM v2.5</span>
+        </div>
+        <button class="btn-close-welcome" onclick="closeWelcomeAgentModal()" title="Đóng tab chào mừng">✕</button>
+      </div>
+
+      <div class="welcome-agent-body">
+        <div class="welcome-avatar-row">
+          <div class="welcome-agent-icon-box">🤖</div>
+          <div>
+            <h2 class="welcome-agent-title">Chào Mừng Đến Với AI Agent!</h2>
+            <p class="welcome-agent-sub">Hệ thống xử lý cơ hội bán hàng B2B thông minh · Minh An Company</p>
+          </div>
+        </div>
+
+        <div class="welcome-user-callout" id="welcomeUserGreetingText">
+          Xin chào <b>Lê Yến Như</b>, chào mừng bạn đến với Trung tâm điều phối AI Agent! Mọi kỹ năng bóc tách yêu cầu, thẩm định kho hàng, tính báo giá và hỗ trợ phê duyệt đều đã sẵn sàng hoạt động.
+        </div>
+
+        <!-- 4 Core Capabilities Highlights -->
+        <div class="welcome-features-grid">
+          <div class="welcome-feat-card">
+            <span class="feat-badge-step">BƯỚC 01</span>
+            <div class="feat-icon">📥</div>
+            <div class="feat-info">
+              <h4>Tiếp Nhận & Bóc Tách</h4>
+              <p>Phân tích văn bản Email/Biểu mẫu tự động trích xuất thực thể B2B chuẩn xác.</p>
+            </div>
+          </div>
+
+          <div class="welcome-feat-card">
+            <span class="feat-badge-step">BƯỚC 02</span>
+            <div class="feat-icon">📦</div>
+            <div class="feat-info">
+              <h4>Thẩm Định Kho Hàng</h4>
+              <p>Đối chiếu Master Catalog, kiểm tra tồn kho và đánh giá tính khả thi tiến độ.</p>
+            </div>
+          </div>
+
+          <div class="welcome-feat-card">
+            <span class="feat-badge-step">BƯỚC 03</span>
+            <div class="feat-icon">💰</div>
+            <div class="feat-info">
+              <h4>Báo Giá & Chiết Khấu</h4>
+              <p>Tính toán toán học MECE, kiểm soát ma trận vượt quyền cần quản lý duyệt.</p>
+            </div>
+          </div>
+
+          <div class="welcome-feat-card">
+            <span class="feat-badge-step">BƯỚC 04</span>
+            <div class="feat-icon">📑</div>
+            <div class="feat-info">
+              <h4>Phê Duyệt & Xuất Báo Cáo</h4>
+              <p>Human-in-the-loop Checkpoint và tự động xuất tài liệu Word / Excel chuẩn mẫu.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Architecture Pill & Creator Credit -->
+        <div class="welcome-meta-bar">
+          <div class="meta-tag">
+            <span>👤 Chủ nhiệm đề án:</span>
+            <b>Lê Yến Như</b>
+          </div>
+          <div class="meta-tag">
+            <span>🛡️ Bảo mật:</span>
+            <b>Phân quyền RBAC & Session Token</b>
+          </div>
+          <div class="meta-tag">
+            <span>⚡ Trạng thái:</span>
+            <b style="color:#059669;">Trực tuyến 100%</b>
+          </div>
+        </div>
+      </div>
+
+      <div class="welcome-agent-footer">
+        <div class="welcome-footer-left">
+          <label class="welcome-checkbox-label">
+            <input type="checkbox" id="chkDoNotShowAgain">
+            <span>Không tự động hiện lại trong phiên này</span>
+          </label>
+        </div>
+        <div class="welcome-footer-right">
+          <button class="btn-welcome-secondary" onclick="welcomeNavigateToStep1()">
+            <span>➕ Tạo yêu cầu mới</span>
+          </button>
+          <button class="btn-welcome-primary" onclick="closeWelcomeAgentModal()">
+            <span>Vào Làm Việc Với Agent &rarr;</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
