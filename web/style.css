@@ -1798,3 +1798,171 @@ body {
     justify-content: flex-end;
   }
 }
+
+
+/* ==========================================================================
+   4-STEP FRAMED WORKFLOW CONTAINER (THEO BỐ CỤC MẪU NGƯỜI DÙNG)
+   ========================================================================== */
+.four-steps-framed-container {
+  background: #ffffff;
+  border: 1.5px solid #f1f5f9;
+  border-radius: 22px;
+  padding: 10px 14px;
+  margin-bottom: 22px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.step-card-box {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.step-card-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.step-card-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.step-num-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.step-card-meta {
+  min-width: 0;
+}
+
+.step-card-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #1e293b;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.step-card-sub {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.step-status-pill {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* 1. Trạng thái Đang thực hiện (Active / Pink Rose accent matching uploaded picture) */
+.step-card-box.active {
+  border: 2px solid #ff4d82;
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(255, 77, 130, 0.15);
+}
+
+.step-card-box.active .step-num-badge {
+  background: #ff4d82;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(255, 77, 130, 0.35);
+}
+
+.step-card-box.active .step-card-title {
+  color: #1e293b;
+}
+
+.step-card-box.active .step-status-pill {
+  background: #ffe4ec;
+  color: #ff3366;
+}
+
+/* 2. Trạng thái Chờ (Pending) */
+.step-card-box.pending {
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.step-card-box.pending .step-num-badge {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.step-card-box.pending .step-card-title {
+  color: #475569;
+}
+
+.step-card-box.pending .step-status-pill {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* 3. Trạng thái Hoàn thành (Done) */
+.step-card-box.done {
+  border: 1.5px solid #cbd5e1;
+  background: #f8fafc;
+}
+
+.step-card-box.done .step-num-badge {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.step-card-box.done .step-card-title {
+  color: #0f172a;
+}
+
+.step-card-box.done .step-status-pill {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+@media (max-width: 1024px) {
+  .four-steps-framed-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .four-steps-framed-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Hide legacy duplicate stepper */
+.human-checkpoint-stepper {
+  display: none !important;
+}

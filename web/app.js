@@ -199,8 +199,9 @@ function openSaasPage(pageId) {
   window.location.hash = `app/${pageId}`;
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
-  // Update Guided Flow Bar
+  // Update Guided Flow Bar & 4-Step Layout
   updateGuidedFlowBar(pageId);
+  updateFourStepLayout(pageId);
 
   if (pageId === 'page-validation') {
     if (!currentProcessingOpp && allOpportunities.length > 0) {
@@ -283,6 +284,67 @@ function executeCurrentGuidedStep() {
     openSaasPage('page-ingestion');
   }
 }
+
+function updateFourStepLayout(pageId) {
+  const c1 = document.getElementById('flowStepCard1');
+  const c2 = document.getElementById('flowStepCard2');
+  const c3 = document.getElementById('flowStepCard3');
+  const c4 = document.getElementById('flowStepCard4');
+
+  const b1 = document.getElementById('flowStepBadge1');
+  const b2 = document.getElementById('flowStepBadge2');
+  const b3 = document.getElementById('flowStepBadge3');
+  const b4 = document.getElementById('flowStepBadge4');
+
+  const p1 = document.getElementById('flowStepPill1');
+  const p2 = document.getElementById('flowStepPill2');
+  const p3 = document.getElementById('flowStepPill3');
+  const p4 = document.getElementById('flowStepPill4');
+
+  if (!c1 || !c2 || !c3 || !c4) return;
+
+  function setStep(card, badge, pill, num, state, text) {
+    card.className = 'step-card-box ' + state;
+    badge.textContent = (state === 'done') ? '✓' : num;
+    pill.className = 'step-status-pill ' + state;
+    pill.textContent = text;
+  }
+
+  if (pageId === 'page-ingestion') {
+    setStep(c1, b1, p1, '1', 'active', 'Đang thực hiện');
+    setStep(c2, b2, p2, '2', 'pending', 'Chờ');
+    setStep(c3, b3, p3, '3', 'pending', 'Chờ');
+    setStep(c4, b4, p4, '4', 'pending', 'Chờ');
+  } else if (pageId === 'page-parsing') {
+    setStep(c1, b1, p1, '1', 'done', 'Xong');
+    setStep(c2, b2, p2, '2', 'active', 'Đang thực hiện');
+    setStep(c3, b3, p3, '3', 'pending', 'Chờ');
+    setStep(c4, b4, p4, '4', 'pending', 'Chờ');
+  } else if (pageId === 'page-validation' || pageId === 'page-pricing') {
+    setStep(c1, b1, p1, '1', 'done', 'Xong');
+    setStep(c2, b2, p2, '2', 'done', 'Xong');
+    setStep(c3, b3, p3, '3', 'active', 'Đang thực hiện');
+    setStep(c4, b4, p4, '4', 'pending', 'Chờ');
+  } else if (pageId === 'page-approval' || pageId === 'page-reports') {
+    setStep(c1, b1, p1, '1', 'done', 'Xong');
+    setStep(c2, b2, p2, '2', 'done', 'Xong');
+    setStep(c3, b3, p3, '3', 'done', 'Xong');
+    setStep(c4, b4, p4, '4', 'active', 'Đang thực hiện');
+  } else {
+    // Default / Dashboard
+    const hasData = allOpportunities && allOpportunities.length > 0;
+    if (hasData) {
+      setStep(c1, b1, p1, '1', 'done', 'Xong');
+      setStep(c2, b2, p2, '2', 'done', 'Xong');
+      setStep(c3, b3, p3, '3', 'done', 'Xong');
+      setStep(c4, b4, p4, '4', 'active', 'Sẵn sàng');
+    } else {
+      setStep(c1, b1, p1, '1', 'active', 'Đang thực hiện');
+      setStep(c2, b2, p2, '2', 'pending', 'Chờ');
+      setStep(c3, b3, p3, '3', 'pending', 'Chờ');
+      setStep(c4, b4, p4, '4', 'pending', 'Chờ');
+    }
+  }
 }
 
 // ==========================================

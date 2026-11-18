@@ -506,6 +506,59 @@
         <!-- Dynamic Page Container -->
         <main class="saas-view-container">
 
+          <!-- =============================================================
+               KHUNG BỐ CỤC 4 BƯỚC CHUẨN UI (FOUR STEPS FRAMED CONTAINER)
+               ============================================================= -->
+          <div class="four-steps-framed-container" id="fourStepsWorkflowBar">
+            <!-- Step 1 Card -->
+            <div class="step-card-box active" id="flowStepCard1" onclick="openSaasPage('page-ingestion')">
+              <div class="step-card-left">
+                <div class="step-num-badge" id="flowStepBadge1">1</div>
+                <div class="step-card-meta">
+                  <div class="step-card-title">BƯỚC 1: TIẾP NHẬN</div>
+                  <div class="step-card-sub" title="Nhận diện dữ liệu, NLP & Bóc tách">Nhận diện dữ liệu, NLP...</div>
+                </div>
+              </div>
+              <div class="step-status-pill" id="flowStepPill1">Đang thực hiện</div>
+            </div>
+
+            <!-- Step 2 Card -->
+            <div class="step-card-box pending" id="flowStepCard2" onclick="openSaasPage('page-parsing')">
+              <div class="step-card-left">
+                <div class="step-num-badge" id="flowStepBadge2">2</div>
+                <div class="step-card-meta">
+                  <div class="step-card-title">BƯỚC 2: LÀM SẠCH</div>
+                  <div class="step-card-sub" title="Phát hiện lỗi • Sửa thực thể • Kho">Phát hiện lỗi • Sửa t...</div>
+                </div>
+              </div>
+              <div class="step-status-pill" id="flowStepPill2">Chờ</div>
+            </div>
+
+            <!-- Step 3 Card -->
+            <div class="step-card-box pending" id="flowStepCard3" onclick="openSaasPage('page-pricing')">
+              <div class="step-card-left">
+                <div class="step-num-badge" id="flowStepBadge3">3</div>
+                <div class="step-card-meta">
+                  <div class="step-card-title">BƯỚC 3: PHÂN TÍCH</div>
+                  <div class="step-card-sub" title="AI đánh giá BI • Xác định giá & Chiết khấu">AI đánh giá BI • Xác ...</div>
+                </div>
+              </div>
+              <div class="step-status-pill" id="flowStepPill3">Chờ</div>
+            </div>
+
+            <!-- Step 4 Card -->
+            <div class="step-card-box pending" id="flowStepCard4" onclick="openSaasPage('page-approval')">
+              <div class="step-card-left">
+                <div class="step-num-badge" id="flowStepBadge4">4</div>
+                <div class="step-card-meta">
+                  <div class="step-card-title">BƯỚC 4: BÁO CÁO</div>
+                  <div class="step-card-sub" title="Xuất bản BI Dashboard & Phê duyệt quản lý">Xuất bản BI Dashb...</div>
+                </div>
+              </div>
+              <div class="step-status-pill" id="flowStepPill4">Chờ</div>
+            </div>
+          </div>
+
           <!-- Guided Automated Workflow Bar (Tự Động Hóa Có Xác Nhận) -->
           <div class="guided-flow-bar" id="guidedFlowBar" style="display:none;">
             <div style="display:flex; align-items:center; gap:12px;">
