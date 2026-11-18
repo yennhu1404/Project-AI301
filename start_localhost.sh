@@ -1,7 +1,14 @@
 #!/bin/bash
 # Script khởi chạy Hệ thống AI Agent Xử lý Cơ hội Bán hàng B2B - Minh An Company
 
-PORT=8888
+PORT=${PORT:-8888}
+
+# Tự động giải phóng cổng nếu đang có tiến trình cũ chiếm dụng
+PID=$(lsof -ti :${PORT} 2>/dev/null)
+if [ -n "$PID" ]; then
+    echo "⚠️ Đang giải phóng cổng ${PORT} từ tiến trình cũ (PID: $PID)..."
+    kill -9 $PID 2>/dev/null || PORT=8889
+fi
 echo "=========================================================================="
 echo "  🚀 AI301: HỆ THỐNG AI AGENT XỬ LÝ CƠ HỘI BÁN HÀNG B2B - MINH AN COMPANY"
 echo "  🌸 Thiết kế theo phong cách DataLens Studio · Lê Yến Như (Nền Vàng Pastel)"

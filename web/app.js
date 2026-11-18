@@ -66,11 +66,14 @@ async function initSystem() {
   }
 
   const hash = window.location.hash.replace('#', '');
-  if (hash === 'login') {
-    navigateTo('login');
+  if (hash === 'login' || (!currentUser && !hash.startsWith('app'))) {
+    navigateTo('landing');
+    setTimeout(() => {
+      openAuthModal('login');
+    }, 300);
   } else if (hash.startsWith('app') && currentUser) {
     navigateTo('app');
-    const subPage = hash.split('/')[1] || 'page-dashboard';
+    const subPage = hash.split('/')[1] || 'page-ingestion';
     openSaasPage(subPage);
   } else {
     navigateTo('landing');
@@ -118,20 +121,18 @@ function navigateTo(targetView) {
   const loginView = document.getElementById('publicLoginView');
   const appView = document.getElementById('privateAppView');
 
-  landingView.style.display = 'none';
-  loginView.style.display = 'none';
-  appView.style.display = 'none';
-
   if (targetView === 'login') {
-    loginView.style.display = 'flex';
-    window.location.hash = 'login';
-    window.scrollTo(0, 0);
-  } else if (targetView === 'app') {
+    openAuthModal('login');
+    return;
+  }
+
+  if (targetView === 'app') {
     if (!currentUser) {
-      alert('🔒 BẢO MẬT: Bạn chưa đăng nhập. Vui lòng đăng nhập trước khi vào hệ thống nội bộ!');
-      navigateTo('login');
+      openAuthModal('login');
       return;
     }
+    landingView.style.display = 'none';
+    closeAuthModal();
     appView.style.display = 'block';
     window.location.hash = 'app';
     applyRoleBasedAccess(currentUser);
@@ -140,6 +141,7 @@ function navigateTo(targetView) {
     }, 200);
   } else {
     landingView.style.display = 'block';
+    appView.style.display = 'none';
     window.location.hash = 'landing';
     window.scrollTo(0, 0);
   }
@@ -383,8 +385,12 @@ async function handleRegisterSubmit(e) {
       await loadBackendData();
 
       setTimeout(() => {
+        closeAuthModal();
         navigateTo('app');
-        openSaasPage('page-dashboard');
+        openSaasPage('page-ingestion');
+        setTimeout(() => {
+          openWelcomeAgentModal(true);
+        }, 300);
       }, 800);
     } else {
       errBox.innerHTML = `<b>Lỗi đăng ký:</b> ${data.error || 'Không thể tạo tài khoản!'}`;
@@ -487,8 +493,9 @@ async function handleLoginSubmit(e) {
       // Load lại dữ liệu theo phân quyền của người dùng vừa đăng nhập
       await loadBackendData();
 
+      closeAuthModal();
       navigateTo('app');
-      openSaasPage('page-dashboard');
+      openSaasPage('page-ingestion');
       setTimeout(() => {
         openWelcomeAgentModal(true);
       }, 300);
@@ -1739,17 +1746,35 @@ function getBadgeStyle(status) {
 
 
 // ==========================================
+// AUTHENTICATION MODAL (POPUP CENTER)
+// ==========================================
+function openAuthModal(mode = 'login') {
+  const loginView = document.getElementById('publicLoginView');
+  if (loginView) {
+    loginView.style.display = 'flex';
+  }
+  switchAuthMode(mode);
+}
+
+function closeAuthModal() {
+  const loginView = document.getElementById('publicLoginView');
+  if (loginView) {
+    loginView.style.display = 'none';
+  }
+}
+
+// ==========================================
 // WELCOME AI AGENT TAB / MODAL FUNCTIONS
 // ==========================================
 function handleStartExperience() {
   if (currentUser) {
     navigateTo('app');
-    openSaasPage('page-dashboard');
+    openSaasPage('page-ingestion');
     setTimeout(() => {
       openWelcomeAgentModal(true);
     }, 300);
   } else {
-    navigateTo('login');
+    openAuthModal('login');
   }
 }
 
@@ -1790,6 +1815,10 @@ function welcomeNavigateToStep1() {
 
 // Global modal dismiss listeners
 window.addEventListener('click', (e) => {
+  const loginView = document.getElementById('publicLoginView');
+  if (loginView && e.target === loginView) {
+    closeAuthModal();
+  }
   const welcomeModal = document.getElementById('welcomeAgentModal');
   if (welcomeModal && e.target === welcomeModal) {
     closeWelcomeAgentModal();
@@ -1798,6 +1827,7 @@ window.addEventListener('click', (e) => {
 
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
+    closeAuthModal();
     const welcomeModal = document.getElementById('welcomeAgentModal');
     if (welcomeModal && welcomeModal.style.display === 'flex') {
       closeWelcomeAgentModal();
