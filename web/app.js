@@ -1288,7 +1288,7 @@ function updateLivePricingCalculation() {
     }
     if (confirmBtn) {
       confirmBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
-      confirmBtn.innerHTML = '<span>✓ Xác Nhận & Phát Hành Báo Giá Chính Thức (Sales Duyệt)</span>';
+      confirmBtn.innerHTML = '<span>📤 Xác Nhận Báo Giá ➔ Tự Động Chuyển Sang Bước 5: Phê Duyệt &rarr;</span>';
     }
   } else {
     if (badgeEl) {
@@ -1306,34 +1306,48 @@ function updateLivePricingCalculation() {
     }
     if (confirmBtn) {
       confirmBtn.style.background = 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)';
-      confirmBtn.innerHTML = '<span>📤 Xác Nhận Lập Phiếu & Chuyển Duyệt Trưởng Phòng &rarr;</span>';
+      confirmBtn.innerHTML = '<span>📤 Xác Nhận Lập Phiếu ➔ Tự Động Chuyển Sang Bước 5: Phê Duyệt &rarr;</span>';
     }
   }
 }
 
 function submitPricingConfirmation() {
-  if (!currentProcessingOpp) return;
-  const discount = currentProcessingOpp.pricing.discount_percentage || 0;
-  const finalTotal = currentProcessingOpp.pricing.total_after_discount || 0;
-
-  if (discount <= 8 && finalTotal < 500000000) {
-    currentProcessingOpp.status = 'Có thể tiếp tục';
-    currentProcessingOpp.status_reason = `Đã thẩm định khả thi, chiết khấu ${discount}% nằm trong thẩm quyền chuyên viên bán hàng`;
-    showStepTransitionToast(`✓ Đã ban hành Báo giá chính thức thành công! Đang chuyển đến Hồ sơ cơ hội...`, 'success', 2500);
-    renderDashboardData(null, allOpportunities);
-    renderAllOpportunitiesTable(allOpportunities);
-    inspectOpportunity(currentProcessingOpp.id);
-    openSaasPage('page-opportunities');
-  } else {
-    currentProcessingOpp.status = 'Chờ duyệt';
-    currentProcessingOpp.status_reason = `Mức chiết khấu ${discount}% vượt thẩm quyền bán hàng, đã lập phiếu chuyển duyệt cấp quản lý`;
-    currentProcessingOpp.pricing.approval_reason = `Đơn hàng số lượng lớn, khách hàng yêu cầu chiết khấu ${discount}%`;
-    showStepTransitionToast(`📤 Đã lập Phiếu Chuyển Duyệt! Đang tự động chuyển sang Hộp Thư Phê Duyệt của Trưởng phòng...`, 'warning', 3000);
-    renderDashboardData(null, allOpportunities);
-    renderApprovalInbox(allOpportunities);
-    renderAllOpportunitiesTable(allOpportunities);
-    openSaasPage('page-approval');
+  if (!currentProcessingOpp) {
+    if (allOpportunities.length > 0) currentProcessingOpp = allOpportunities[0];
+    else { alert('Chưa có cơ hội nào đang được xử lý.'); return; }
   }
+
+  const discountInput = document.getElementById('pricingDiscountInput');
+  const discount = parseFloat(discountInput ? discountInput.value : (currentProcessingOpp.pricing.discount_percentage || 5)) || 5;
+  const totalBefore = currentProcessingOpp.pricing.total_before_discount || 0;
+  const discountAmount = Math.round(totalBefore * (discount / 100));
+  const finalTotal = Math.max(0, totalBefore - discountAmount);
+
+  currentProcessingOpp.pricing.discount_percentage = discount;
+  currentProcessingOpp.pricing.discount_amount = discountAmount;
+  currentProcessingOpp.pricing.total_after_discount = finalTotal;
+
+  // Luôn chuyển sang trạng thái Chờ duyệt để bước tiếp theo (Bước 5: Phê duyệt) có dữ liệu duyệt
+  currentProcessingOpp.status = 'Chờ duyệt';
+  currentProcessingOpp.status_reason = `Đã hoàn tất tính toán báo giá (Chiết khấu ${discount}%, thành tiền ${formatCurrency(finalTotal)}). Lập Phiếu chuyển duyệt trình Trưởng phòng Kinh doanh xem xét.`;
+  currentProcessingOpp.pricing.approval_reason = `Đơn hàng B2B cần phê duyệt chiết khấu ${discount}% và điều khoản hợp đồng trước khi phát hành chính thức.`;
+
+  // Đảm bảo đơn hàng có mặt trong danh sách tổng
+  const existingIdx = allOpportunities.findIndex(o => o.id === currentProcessingOpp.id);
+  if (existingIdx !== -1) {
+    allOpportunities[existingIdx] = currentProcessingOpp;
+  } else {
+    allOpportunities.unshift(currentProcessingOpp);
+  }
+
+  showStepTransitionToast(`📤 Đã xác nhận báo giá! Tự động chuyển sang Bước 5: Hộp Thư Phê Duyệt của Trưởng phòng...`, 'warning', 3000);
+
+  renderDashboardData(null, allOpportunities);
+  renderApprovalInbox(allOpportunities);
+  renderAllOpportunitiesTable(allOpportunities);
+
+  // TỰ ĐỘNG CHUYỂN THẲNG SANG BƯỚC 5: PHÊ DUYỆT
+  openSaasPage('page-approval');
 }
 
 // ==========================================
