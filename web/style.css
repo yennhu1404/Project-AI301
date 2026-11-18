@@ -1395,3 +1395,31 @@ body {
   justify-content: flex-end;
   gap: 12px;
 }
+
+/* Step Transition Toast Notification */
+.hitl-toast {
+  position: fixed;
+  top: 24px;
+  right: 28px;
+  background: #ffffff;
+  border-left: 5px solid #10b981;
+  border-radius: 14px;
+  padding: 14px 20px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16);
+  font-size: 13.5px;
+  color: #1e293b;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: toastSlideIn 0.3s ease-out;
+  max-width: 440px;
+  border-top: 1px solid #f1f5f9;
+  border-right: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+@keyframes toastSlideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
