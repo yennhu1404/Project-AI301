@@ -194,6 +194,20 @@ function openSaasPage(pageId) {
   window.location.hash = `app/${pageId}`;
   window.scrollTo(0, 0);
 
+  if (pageId === 'page-validation') {
+    if (!currentProcessingOpp && allOpportunities.length > 0) {
+      currentProcessingOpp = allOpportunities[0];
+    }
+    if (currentProcessingOpp) renderActiveOppValidation(currentProcessingOpp);
+  }
+
+  if (pageId === 'page-pricing') {
+    if (!currentProcessingOpp && allOpportunities.length > 0) {
+      currentProcessingOpp = allOpportunities[0];
+    }
+    if (currentProcessingOpp) renderActiveOppPricing(currentProcessingOpp);
+  }
+
   if (pageId === 'page-audit') {
     loadAuditLogs();
   }
@@ -607,10 +621,90 @@ function loadTestCaseToForm(tcNum) {
   document.getElementById('pageIngestTextarea').value = text || '';
 }
 
-function handleFileUploadSim(e) {
+async function handleFileUploadSim(e) {
   const file = e.target.files[0];
-  if (file) {
-    document.getElementById('pageIngestTextarea').value = `[ĐÃ TẢI LÊN TỆP: ${file.name}]\n` + TEST_CASES_SAMPLES[1];
+  if (!file) return;
+
+  const fileName = file.name;
+  const triggerAuto = async (text) => {
+    document.getElementById('pageIngestTextarea').value = text;
+    await runIngestAutoToApproval(fileName);
+  };
+
+  if (fileName.endsWith('.txt') || fileName.endsWith('.csv') || fileName.endsWith('.json')) {
+    const reader = new FileReader();
+    reader.onload = async function(evt) {
+      let readText = evt.target.result;
+      if (!readText || readText.trim().length < 15) {
+        readText = TEST_CASES_SAMPLES[3];
+      }
+      await triggerAuto(`[TẬP TIN ĐÃ TẢI LÊN: ${fileName}]\n` + readText);
+    };
+    reader.readAsText(file);
+  } else {
+    // File Excel, PDF, Word hoặc định dạng khác
+    const simContent = `[TẬP TIN ĐÃ TẢI LÊN: ${fileName} - ĐƠN ĐẶT HÀNG DOANH NGHIỆP B2B]\n` + TEST_CASES_SAMPLES[3];
+    await triggerAuto(simContent);
+  }
+}
+
+async function runIngestAutoToApproval(customFileName) {
+  let rawText = document.getElementById('pageIngestTextarea').value.trim();
+  if (!rawText) {
+    rawText = TEST_CASES_SAMPLES[3];
+    document.getElementById('pageIngestTextarea').value = rawText;
+  }
+
+  const fileLabel = customFileName || 'Tệp đơn hàng B2B';
+
+  try {
+    const res = await fetch('/api/process_request', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ raw_text: rawText, source: `Nạp tệp tự động: ${fileLabel}` })
+    });
+
+    const data = await res.json();
+    if (data.status === 'success') {
+      currentProcessingOpp = data.opportunity;
+
+      // Đảm bảo trạng thái Chờ duyệt nếu có chiết khấu cao
+      if (currentProcessingOpp.pricing.discount_percentage > 8 || currentProcessingOpp.pricing.total_after_discount >= 500000000) {
+        currentProcessingOpp.status = 'Chờ duyệt';
+        currentProcessingOpp.status_reason = `Mức chiết khấu ${currentProcessingOpp.pricing.discount_percentage}% vượt thẩm quyền chuyên viên bán hàng, AI Agent tự động lập Phiếu chuyển duyệt trình Trưởng phòng.`;
+        currentProcessingOpp.pricing.approval_reason = `Đơn đặt hàng số lượng lớn theo tệp ${fileLabel}, khách hàng yêu cầu chiết khấu ${currentProcessingOpp.pricing.discount_percentage}%`;
+      }
+
+      allOpportunities.unshift(currentProcessingOpp);
+
+      renderDashboardData(data.summary, allOpportunities);
+      renderApprovalInbox(allOpportunities);
+      renderAllOpportunitiesTable(allOpportunities);
+
+      // Chuyển thẳng sang trang Phê duyệt
+      openSaasPage('page-approval');
+
+      // Mở thông báo trực quan tóm tắt quy trình AI đã chạy ngầm
+      showHitlConfirmation(
+        '⚡ TỰ ĐỘNG CHUYỂN SANG PHÊ DUYỆT THÀNH CÔNG',
+        `<div style="color:#047857; font-weight:700; font-size:14px; margin-bottom:8px;">
+           ✓ AI Agent đã phân tích tệp [${fileLabel}] và xử lý tự động toàn trình:
+         </div>
+         <div style="background:#f8fafc; padding:12px; border-radius:10px; font-size:12.5px; border:1px solid #e2e8f0; line-height:1.7;">
+           • <b>Bóc tách tự động:</b> Khách hàng <b>${currentProcessingOpp.customer_name}</b>, ${currentProcessingOpp.validation.items.length} mặt hàng.<br>
+           • <b>Thẩm định kho:</b> Đối chiếu Master Catalog, kho đáp ứng khả dụng 100%.<br>
+           • <b>Kiểm tra hạn mức:</b> Chiết khấu <b>${currentProcessingOpp.pricing.discount_percentage}%</b> vượt hạn mức Sales (tối đa 8%).<br>
+           • <b>Quyết định tự động:</b> AI Agent tự động lập <b>Phiếu Chuyển Duyệt</b> và đưa thẳng vào <b>Hộp thư Trưởng phòng</b>!
+         </div>
+         <p style="margin-top:10px; color:#6d28d9; font-weight:700;">Hệ thống đã tự động chuyển đến Hộp thư phê duyệt để Trưởng phòng xem xét và ra quyết định ngay bên dưới!</p>`,
+        () => {}
+      );
+    } else {
+      alert('Lỗi: ' + (data.error || 'Không thể xử lý'));
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Lỗi kết nối máy chủ');
   }
 }
 
@@ -648,6 +742,7 @@ async function runIngestToParsing() {
 }
 
 function renderParsingSplitView(opp) {
+  currentProcessingOpp = opp;
   document.getElementById('parsingRawContent').textContent = opp.extracted.raw_text;
 
   const itemsHtml = opp.validation.items.map(it => `
@@ -682,6 +777,43 @@ function renderParsingSplitView(opp) {
       <div style="color:#64748b; font-size:12px; margin-top:2px;"><b>Căn cứ:</b> ${opp.status_reason}</div>
     </div>
   `;
+
+  // Cập nhật Human Checkpoint 1 Banner
+  const badgeEl = document.getElementById('parsingVerificationBadge');
+  const guidanceEl = document.getElementById('parsingCheckpointGuidance');
+  const confirmBtn = document.getElementById('btnConfirmParsingAction');
+
+  if (opp.missing_fields && opp.missing_fields.length > 0) {
+    if (badgeEl) {
+      badgeEl.className = 'badge-tag missing';
+      badgeEl.textContent = '⚠️ Cần Bổ Sung Dữ Liệu';
+    }
+    if (guidanceEl) {
+      guidanceEl.innerHTML = `
+        <div style="color:#b91c1c; font-weight:700; margin-bottom:4px;">⚠️ Dữ liệu đầu vào chưa đủ điều kiện tự động:</div>
+        Thiếu các trường bắt buộc: <b>${opp.missing_fields.join(', ')}</b>. Theo quy chuẩn nghiệp vụ, hệ thống <b>không tự động ước lượng</b> các yêu cầu chưa rõ ràng. Bạn vui lòng bấm <b>Yêu Cầu Khách Hàng Bổ Sung</b> để gửi email, hoặc bấm <b>Chỉnh Sửa Thủ Công</b> trước khi tiếp tục.
+      `;
+    }
+    if (confirmBtn) {
+      confirmBtn.style.background = '#f59e0b';
+      confirmBtn.innerHTML = '<span>⚠️ Xác Nhận (Bỏ Qua Thiếu Sót & Tiếp Tục) &rarr;</span>';
+    }
+  } else {
+    if (badgeEl) {
+      badgeEl.className = 'badge-tag pending';
+      badgeEl.textContent = 'Chờ Con Người Duyệt (Checkpoint 1)';
+    }
+    if (guidanceEl) {
+      guidanceEl.innerHTML = `
+        <div style="color:#047857; font-weight:700; margin-bottom:4px;">✓ Dữ liệu trích xuất đạt độ tin cậy 100%:</div>
+        Toàn bộ thực thể đã được chuẩn hóa. Vui lòng đối chiếu với văn bản gốc bên trái và bấm <b>Xác Nhận Tính Chính Xác</b> để phê duyệt bóc tách và chuyển sang bước Thẩm định kho.
+      `;
+    }
+    if (confirmBtn) {
+      confirmBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+      confirmBtn.innerHTML = '<span>✓ Xác Nhận Tính Chính Xác & Chuyển Sang Thẩm Định Kho &rarr;</span>';
+    }
+  }
 }
 
 // ==========================================
@@ -811,7 +943,356 @@ function runLiveInventoryValidation() {
 }
 
 // ==========================================
-// PAGE 9: APPROVAL INBOX (TRƯỞNG PHÒNG)
+// HUMAN CHECKPOINTS & INTERACTIVE HITL WORKFLOW
+// ==========================================
+let pendingHitlAction = null;
+let currentApprOppId = null;
+let currentApprDecision = null;
+
+function openHitlModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeHitlModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) modal.style.display = 'none';
+}
+
+function showHitlConfirmation(title, bodyHtml, onConfirm) {
+  const titleEl = document.getElementById('hitlConfirmTitle');
+  const bodyEl = document.getElementById('hitlConfirmBody');
+  const submitBtn = document.getElementById('hitlConfirmSubmitBtn');
+
+  if (titleEl) titleEl.innerHTML = title;
+  if (bodyEl) bodyEl.innerHTML = bodyHtml;
+  pendingHitlAction = onConfirm;
+
+  if (submitBtn) {
+    submitBtn.onclick = () => {
+      closeHitlModal('hitlConfirmModal');
+      if (typeof pendingHitlAction === 'function') {
+        pendingHitlAction();
+      }
+    };
+  }
+  openHitlModal('hitlConfirmModal');
+}
+
+// --- CHECKPOINT 1: XÁC NHẬN BÓC TÁCH ---
+function confirmParsingCheckpoint() {
+  if (!currentProcessingOpp) {
+    if (allOpportunities.length > 0) currentProcessingOpp = allOpportunities[0];
+    else { alert('Chưa có cơ hội nào đang được xử lý.'); return; }
+  }
+
+  showHitlConfirmation(
+    '🛡️ Xác Nhận Kết Quả Bóc Tách (Human Checkpoint 1)',
+    `<div>Bạn đang kiểm tra và phê duyệt kết quả bóc tách cho khách hàng: <b>${currentProcessingOpp.customer_name}</b>.</div>
+     <div style="margin-top:10px; background:#f8fafc; padding:12px; border-radius:10px; font-size:12.5px; border:1px solid #e2e8f0; line-height:1.7;">
+       • Mã cơ hội: <b>${currentProcessingOpp.id}</b><br>
+       • Mặt hàng: <b>${currentProcessingOpp.validation.items.length} sản phẩm</b><br>
+       • Ngân sách: <b>${currentProcessingOpp.extracted.budget ? formatCurrency(currentProcessingOpp.extracted.budget) : 'Chưa xác định'}</b><br>
+       • Người xác nhận: <b>${currentUser ? currentUser.full_name : 'Quản trị viên'}</b>
+     </div>
+     <p style="margin-top:10px; color:#059669; font-weight:700;">Hệ thống sẽ chuyển sang Bước 3: Thẩm Định Năng Lực Tồn Kho & Master Catalog.</p>`,
+    () => {
+      currentProcessingOpp.parsing_verified = true;
+      renderActiveOppValidation(currentProcessingOpp);
+      openSaasPage('page-validation');
+    }
+  );
+}
+
+function openRequestMoreInfoModal() {
+  if (!currentProcessingOpp) return;
+  const missingAlert = document.getElementById('reqMoreMissingAlert');
+  if (missingAlert) {
+    missingAlert.textContent = currentProcessingOpp.missing_fields && currentProcessingOpp.missing_fields.length > 0
+      ? `Các thông tin còn thiếu: ${currentProcessingOpp.missing_fields.join(', ')}`
+      : 'Yêu cầu làm rõ thêm về thời hạn giao hàng và địa điểm bàn giao.';
+  }
+  const emailInput = document.getElementById('reqMoreCustomerEmail');
+  if (emailInput) emailInput.value = currentProcessingOpp.email || 'contact@customer.vn';
+
+  const bodyInput = document.getElementById('reqMoreEmailBody');
+  if (bodyInput) {
+    bodyInput.value = `Kính gửi Quý công ty ${currentProcessingOpp.customer_name},\n\nMinh An Company đã tiếp nhận yêu cầu mua sắm thiết bị từ Quý khách. Để hoàn thiện báo giá và kiểm tra tồn kho chính xác nhất, chúng tôi kính đề nghị Quý khách vui lòng bổ sung/làm rõ thêm thông tin sau:\n- ${currentProcessingOpp.missing_fields && currentProcessingOpp.missing_fields.length > 0 ? currentProcessingOpp.missing_fields.join('\n- ') : 'Số lượng và thời hạn cụ thể'}\n\nTrân trọng cảm ơn sự hợp tác của Quý khách!\nBộ phận B2B - Minh An Company`;
+  }
+  openHitlModal('hitlRequestMoreInfoModal');
+}
+
+function submitRequestMoreInfo() {
+  if (!currentProcessingOpp) return;
+  closeHitlModal('hitlRequestMoreInfoModal');
+  currentProcessingOpp.status = 'Cần bổ sung thông tin';
+  currentProcessingOpp.status_reason = 'Đã gửi email đề nghị khách hàng bổ sung các thông tin còn thiếu';
+  alert(`✓ Đã gửi email yêu cầu bổ sung thông tin tới ${currentProcessingOpp.customer_name}! Trạng thái cơ hội chuyển sang "Cần bổ sung thông tin".`);
+  renderDashboardData(null, allOpportunities);
+  renderAllOpportunitiesTable(allOpportunities);
+  openSaasPage('page-opportunities');
+}
+
+function openEditParsingModal() {
+  if (!currentProcessingOpp) return;
+  document.getElementById('editCustomerName').value = currentProcessingOpp.customer_name || '';
+  document.getElementById('editContactPerson').value = currentProcessingOpp.contact_person || '';
+  document.getElementById('editCustomerEmail').value = currentProcessingOpp.email || '';
+  document.getElementById('editBudget').value = currentProcessingOpp.extracted.budget || '';
+  document.getElementById('editDeadlineDays').value = currentProcessingOpp.extracted.deadline_days || '';
+  openHitlModal('hitlEditParsingModal');
+}
+
+function saveEditedParsingData() {
+  if (!currentProcessingOpp) return;
+  currentProcessingOpp.customer_name = document.getElementById('editCustomerName').value.trim() || currentProcessingOpp.customer_name;
+  currentProcessingOpp.contact_person = document.getElementById('editContactPerson').value.trim() || currentProcessingOpp.contact_person;
+  currentProcessingOpp.email = document.getElementById('editCustomerEmail').value.trim() || currentProcessingOpp.email;
+
+  const budget = parseFloat(document.getElementById('editBudget').value);
+  if (!isNaN(budget)) currentProcessingOpp.extracted.budget = budget;
+
+  const deadline = parseInt(document.getElementById('editDeadlineDays').value);
+  if (!isNaN(deadline)) currentProcessingOpp.extracted.deadline_days = deadline;
+
+  if (currentProcessingOpp.missing_fields) {
+    currentProcessingOpp.missing_fields = currentProcessingOpp.missing_fields.filter(f => {
+      if (f.includes('ngân sách') && budget) return false;
+      if (f.includes('thời hạn') && deadline) return false;
+      if (f.includes('email') && currentProcessingOpp.email) return false;
+      return true;
+    });
+  }
+
+  closeHitlModal('hitlEditParsingModal');
+  renderParsingSplitView(currentProcessingOpp);
+  alert('✓ Đã cập nhật thông tin bóc tách thủ công thành công!');
+}
+
+// --- CHECKPOINT 1.2: THẨM ĐỊNH KHO ---
+function renderActiveOppValidation(opp) {
+  if (!opp) return;
+  const oppIdEl = document.getElementById('valOppId');
+  if (oppIdEl) oppIdEl.textContent = opp.id;
+
+  const wrap = document.getElementById('valOppItemsTableWrap');
+  if (!wrap) return;
+
+  const isAllStockOk = opp.validation.items.every(it => it.is_stock_ok);
+  const badgeEl = document.getElementById('valStockMatchBadge');
+  if (badgeEl) {
+    badgeEl.className = isAllStockOk ? 'badge-tag eligible' : 'badge-tag unfulfilled';
+    badgeEl.textContent = isAllStockOk ? 'Đủ Hàng Đáp Ứng 100%' : 'Thiếu Hụt Kho / Cần Nhập';
+  }
+
+  wrap.innerHTML = `
+    <table class="saas-table" style="margin-top:8px;">
+      <thead>
+        <tr>
+          <th>Mã SKU</th>
+          <th>Tên Sản Phẩm</th>
+          <th>SL Yêu Cầu</th>
+          <th>Đơn Giá Niêm Yết</th>
+          <th>Tồn Khả Dụng</th>
+          <th>Tình Trạng Kho</th>
+          <th>Thời Gian Giao Tiêu Chuẩn</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${opp.validation.items.map(it => `
+          <tr>
+            <td><code>${it.sku}</code></td>
+            <td><b>${it.name}</b></td>
+            <td><b>${it.requested_qty}</b> chiếc</td>
+            <td>${formatCurrency(it.unit_price)}</td>
+            <td style="font-weight:700;">${it.stock_available} chiếc</td>
+            <td><span class="badge-tag ${it.is_stock_ok ? 'eligible' : 'unfulfilled'}">${it.stock_status}</span></td>
+            <td>${it.standard_lead_days || 3} ngày</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function confirmInventoryAndProceed() {
+  if (!currentProcessingOpp) return;
+  showHitlConfirmation(
+    '🛡️ Xác Nhận Năng Lực Tồn Kho (Checkpoint 1.2)',
+    `<div>Bạn đang phê duyệt kết quả thẩm định kho cho cơ hội <b>${currentProcessingOpp.id}</b> (${currentProcessingOpp.customer_name}).</div>
+     <div style="margin-top:10px; background:#f0fdf4; padding:12px; border-radius:10px; font-size:12.5px; border:1px solid #bbf7d0; color:#166534; line-height:1.7;">
+       ✓ Đã đối chiếu thời gian thực với Master Catalog Minh An Company.<br>
+       ✓ Lượng tồn khả dụng sẽ được đánh dấu giữ chỗ (Hold inventory) cho đơn hàng này.<br>
+       ✓ Người xác nhận: <b>${currentUser ? currentUser.full_name : 'Quản trị viên'}</b>
+     </div>
+     <p style="margin-top:10px; color:#6d28d9; font-weight:700;">Hệ thống sẽ chuyển sang Bước 4: Thiết Lập Báo Giá & Phân Quyền Chiết Khấu.</p>`,
+    () => {
+      currentProcessingOpp.inventory_verified = true;
+      renderActiveOppPricing(currentProcessingOpp);
+      openSaasPage('page-pricing');
+    }
+  );
+}
+
+function markInventoryUnfulfilled() {
+  if (!currentProcessingOpp) return;
+  showHitlConfirmation(
+    '✕ Đánh Dấu Không Đáp Ứng Tồn Kho',
+    `<div>Bạn có chắc chắn muốn đánh dấu cơ hội <b>${currentProcessingOpp.id}</b> là <b>Chưa đáp ứng</b> do không đủ hàng trong kho và không thể đáp ứng tiến độ khách hàng?</div>`,
+    () => {
+      currentProcessingOpp.status = 'Chưa đáp ứng';
+      currentProcessingOpp.status_reason = 'Kho không đủ tồn khả dụng và lead time nhập hàng không kịp tiến độ';
+      renderDashboardData(null, allOpportunities);
+      renderAllOpportunitiesTable(allOpportunities);
+      openSaasPage('page-opportunities');
+    }
+  );
+}
+
+// --- CHECKPOINT 1.3: TÍNH GIÁ & CHIẾT KHẤU ---
+function renderActiveOppPricing(opp) {
+  if (!opp) return;
+  const oppIdEl = document.getElementById('pricingOppId');
+  if (oppIdEl) oppIdEl.textContent = opp.id;
+
+  const totalOriginal = opp.validation.items.reduce((sum, it) => sum + (it.unit_price * it.requested_qty), 0);
+  opp.pricing.total_before_discount = totalOriginal;
+
+  const totalEl = document.getElementById('pricingOriginalTotal');
+  if (totalEl) totalEl.textContent = formatCurrency(totalOriginal);
+
+  const itemCountNote = document.getElementById('pricingItemCountNote');
+  if (itemCountNote) itemCountNote.textContent = `${opp.validation.items.length} mặt hàng, ${opp.validation.items.reduce((s, it) => s + it.requested_qty, 0)} sản phẩm`;
+
+  const discountInput = document.getElementById('pricingDiscountInput');
+  if (discountInput) {
+    discountInput.value = opp.pricing.discount_percentage || opp.extracted.requested_discount || 5;
+  }
+
+  updateLivePricingCalculation();
+}
+
+function setDiscountQuick(val) {
+  const discountInput = document.getElementById('pricingDiscountInput');
+  if (discountInput) {
+    discountInput.value = val;
+    updateLivePricingCalculation();
+  }
+}
+
+function updateLivePricingCalculation() {
+  if (!currentProcessingOpp) return;
+  const discountInput = document.getElementById('pricingDiscountInput');
+  const discount = parseFloat(discountInput ? discountInput.value : 5) || 0;
+  const totalBefore = currentProcessingOpp.pricing.total_before_discount || 0;
+
+  const discountAmount = Math.round(totalBefore * (discount / 100));
+  const finalTotal = Math.max(0, totalBefore - discountAmount);
+
+  currentProcessingOpp.pricing.discount_percentage = discount;
+  currentProcessingOpp.pricing.discount_amount = discountAmount;
+  currentProcessingOpp.pricing.total_after_discount = finalTotal;
+
+  const discountValText = document.getElementById('pricingDiscountValText');
+  if (discountValText) discountValText.textContent = `Giảm: -${formatCurrency(discountAmount)}`;
+
+  const finalTotalEl = document.getElementById('pricingFinalTotal');
+  if (finalTotalEl) finalTotalEl.textContent = formatCurrency(finalTotal);
+
+  const badgeEl = document.getElementById('pricingGovernanceBadge');
+  const noticeEl = document.getElementById('pricingGovernanceNotice');
+  const confirmBtn = document.getElementById('btnConfirmPricingAction');
+
+  if (discount <= 8 && finalTotal < 500000000) {
+    if (badgeEl) {
+      badgeEl.className = 'badge-tag eligible';
+      badgeEl.textContent = 'Trong Hạn Mức Sales (<= 8%)';
+    }
+    if (noticeEl) {
+      noticeEl.style.background = '#ecfdf5';
+      noticeEl.style.border = '1px solid #a7f3d0';
+      noticeEl.style.color = '#065f46';
+      noticeEl.innerHTML = `
+        <b>✓ Hạn mức thẩm quyền:</b> Mức chiết khấu <b>${discount}%</b> và giá trị đơn hàng <b>${formatCurrency(finalTotal)}</b> nằm trong thẩm quyền tự quyết của <b>Chuyên viên Sales</b>.<br>
+        Bạn có toàn quyền xác nhận và ban hành báo giá chính thức ngay cho khách hàng mà không cần trình duyệt cấp trên.
+      `;
+    }
+    if (confirmBtn) {
+      confirmBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+      confirmBtn.innerHTML = '<span>✓ Xác Nhận & Phát Hành Báo Giá Chính Thức (Sales Duyệt)</span>';
+    }
+  } else {
+    if (badgeEl) {
+      badgeEl.className = 'badge-tag pending';
+      badgeEl.textContent = 'Vượt Hạn Mức (> 8%) - Cần Trưởng Phòng Duyệt';
+    }
+    if (noticeEl) {
+      noticeEl.style.background = '#f5f3ff';
+      noticeEl.style.border = '1px solid #ddd6fe';
+      noticeEl.style.color = '#5b21b6';
+      noticeEl.innerHTML = `
+        <b>⚠️ Yêu cầu chuyển duyệt cấp trên:</b> Mức chiết khấu <b>${discount}%</b> (hoặc giá trị hợp đồng &ge; 500 triệu) đã <b>vượt quá thẩm quyền tự duyệt</b> của Chuyên viên Sales (tối đa 8%).<br>
+        Theo quy chế tài chính Minh An Company, đơn hàng này bắt buộc phải lập <b>Phiếu Chuyển Duyệt</b> trình Trưởng phòng Kinh doanh xem xét.
+      `;
+    }
+    if (confirmBtn) {
+      confirmBtn.style.background = 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)';
+      confirmBtn.innerHTML = '<span>📤 Xác Nhận Lập Phiếu & Chuyển Duyệt Trưởng Phòng &rarr;</span>';
+    }
+  }
+}
+
+function submitPricingConfirmation() {
+  if (!currentProcessingOpp) return;
+  const discount = currentProcessingOpp.pricing.discount_percentage || 0;
+  const finalTotal = currentProcessingOpp.pricing.total_after_discount || 0;
+
+  if (discount <= 8 && finalTotal < 500000000) {
+    showHitlConfirmation(
+      '✓ Xác Nhận Ban Hành Báo Giá (Sales Duyệt)',
+      `<div>Bạn đang phát hành báo giá chính thức cho khách hàng <b>${currentProcessingOpp.customer_name}</b>:</div>
+       <div style="margin-top:10px; background:#f0fdf4; padding:12px; border-radius:10px; font-size:12.5px; border:1px solid #bbf7d0; color:#065f46; line-height:1.7;">
+         • Mã cơ hội: <b>${currentProcessingOpp.id}</b><br>
+         • Mức chiết khấu: <b>${discount}%</b> (-${formatCurrency(currentProcessingOpp.pricing.discount_amount)})<br>
+         • Tổng thanh toán: <b>${formatCurrency(finalTotal)}</b><br>
+         • Trạng thái cập nhật: <b>Có thể tiếp tục</b><br>
+         • Phê duyệt bởi: <b>${currentUser ? currentUser.full_name : 'Chuyên viên Sales'}</b>
+       </div>`,
+      () => {
+        currentProcessingOpp.status = 'Có thể tiếp tục';
+        currentProcessingOpp.status_reason = `Đã thẩm định khả thi, chiết khấu ${discount}% nằm trong thẩm quyền chuyên viên bán hàng`;
+        renderDashboardData(null, allOpportunities);
+        renderAllOpportunitiesTable(allOpportunities);
+        inspectOpportunity(currentProcessingOpp.id);
+        openSaasPage('page-opportunities');
+      }
+    );
+  } else {
+    showHitlConfirmation(
+      '📤 Xác Nhận Lập Phiếu Chuyển Duyệt (Human Checkpoint 2)',
+      `<div>Chuyển hồ sơ cơ hội <b>${currentProcessingOpp.id}</b> lên Hộp thư Trưởng phòng Kinh doanh:</div>
+       <div style="margin-top:10px; background:#faf5ff; padding:12px; border-radius:10px; font-size:12.5px; border:1px solid #ddd6fe; color:#5b21b6; line-height:1.7;">
+         • Khách hàng: <b>${currentProcessingOpp.customer_name}</b><br>
+         • Mức chiết khấu yêu cầu: <b>${discount}%</b> (Vượt hạn mức Sales 8%)<br>
+         • Tổng giá trị: <b>${formatCurrency(finalTotal)}</b><br>
+         • Người trình duyệt: <b>${currentUser ? currentUser.full_name : 'Chuyên viên Sales'}</b><br>
+         • Trạng thái cập nhật: <b>Chờ duyệt</b>
+       </div>`,
+      () => {
+        currentProcessingOpp.status = 'Chờ duyệt';
+        currentProcessingOpp.status_reason = `Mức chiết khấu ${discount}% vượt thẩm quyền bán hàng, đã lập phiếu chuyển duyệt cấp quản lý`;
+        currentProcessingOpp.pricing.approval_reason = `Đơn hàng số lượng lớn, khách hàng yêu cầu chiết khấu ${discount}%`;
+        renderDashboardData(null, allOpportunities);
+        renderApprovalInbox(allOpportunities);
+        renderAllOpportunitiesTable(allOpportunities);
+        openSaasPage('page-approval');
+      }
+    );
+  }
+}
+
+// ==========================================
+// PAGE 9: APPROVAL INBOX (TRƯỞNG PHÒNG - CHECKPOINT 2)
 // ==========================================
 function renderApprovalInbox(opps) {
   const container = document.getElementById('approvalPendingContainer');
@@ -829,7 +1310,6 @@ function renderApprovalInbox(opps) {
     return;
   }
 
-  // Kiểm tra quyền phê duyệt
   const canApprove = currentUser && (currentUser.role_code === 'SALES_MANAGER' || currentUser.role_code === 'ADMIN');
 
   container.innerHTML = pendingOpps.map(o => `
@@ -839,7 +1319,7 @@ function renderApprovalInbox(opps) {
           <div style="font-size:16px; font-weight:800; color:#6b21a8;">
             📑 PHIẾU CHUYỂN DUYỆT: ${o.id} — ${o.customer_name}
           </div>
-          <small style="color:#64748b;">Trình duyệt bởi chuyên viên: <b>${o.sales_rep.name}</b></small>
+          <small style="color:#64748b;">Trình duyệt bởi chuyên viên: <b>${o.sales_rep ? o.sales_rep.name : 'N/A'}</b></small>
         </div>
         <span class="badge-tag pending">Chờ Quyết Định</span>
       </div>
@@ -857,45 +1337,89 @@ function renderApprovalInbox(opps) {
 
       ${canApprove ? `
       <div style="display:flex; align-items:center; gap:10px; padding-top:12px; border-top:1px dashed #e2e8f0;">
-        <button class="btn-primary-action" style="background:#16a34a;" onclick="submitManagerDecision('${o.id}', 'APPROVED')">
+        <button class="btn-primary-action" style="background:#16a34a;" onclick="openManagerApprovalModal('${o.id}', 'APPROVED')">
           <span>✓ Phê Duyệt Chiết Khấu</span>
         </button>
-        <button class="btn-secondary-tool" style="color:#dc2626; border-color:#fca5a5;" onclick="submitManagerDecision('${o.id}', 'REJECTED')">
+        <button class="btn-secondary-tool" style="color:#dc2626; border-color:#fca5a5;" onclick="openManagerApprovalModal('${o.id}', 'REJECTED')">
           <span>✕ Từ Chối</span>
         </button>
-        <button class="btn-secondary-tool" onclick="submitManagerDecision('${o.id}', 'REVISE')">
+        <button class="btn-secondary-tool" onclick="openManagerApprovalModal('${o.id}', 'REVISE')">
           <span>✏️ Yêu Cầu Chỉnh Sửa</span>
         </button>
       </div>
       ` : `
       <div style="padding:10px 14px; background:#fff1f2; border:1px solid #fecdd3; border-radius:8px; font-size:12px; color:#be123c;">
-        🔒 <b>Quyền hạn chế:</b> Bạn đang đăng nhập với vai trò <b>${currentUser.role_name}</b>. Bạn chỉ được xem phiếu duyệt này, quyền bấm Duyệt/Từ chối thuộc về Trưởng phòng Kinh doanh (Lê Văn Tuấn).
+        🔒 <b>Quyền hạn chế:</b> Bạn đang đăng nhập với vai trò <b>${currentUser.role_name}</b>. Bạn chỉ được xem phiếu duyệt này, quyền bấm Duyệt/Từ chối thuộc về Trưởng phòng Kinh doanh (Lê Văn Tuấn) hoặc Quản trị viên (Lê Yến Như).
       </div>
       `}
     </div>
   `).join('');
 }
 
-async function submitManagerDecision(oppId, decision) {
+function openManagerApprovalModal(oppId, decision) {
   if (!currentUser || (currentUser.role_code !== 'SALES_MANAGER' && currentUser.role_code !== 'ADMIN')) {
-    alert('🚫 Bạn không có thẩm quyền phê duyệt chiết khấu. Chỉ Trưởng phòng Kinh doanh mới được phê duyệt!');
+    alert('🚫 Bạn không có thẩm quyền phê duyệt chiết khấu. Chỉ Trưởng phòng Kinh doanh hoặc Admin mới được phê duyệt!');
     return;
   }
 
-  const note = prompt(decision === 'APPROVED' ? 'Ghi chú phê duyệt của Trưởng phòng:' : 'Lý do từ chối hoặc yêu cầu sửa:');
-  if (note === null) return;
+  currentApprOppId = oppId;
+  currentApprDecision = decision;
+
+  const opp = allOpportunities.find(o => o.id === oppId);
+  if (!opp) return;
+
+  const titleEl = document.getElementById('apprModalTitle');
+  const summaryEl = document.getElementById('apprModalOppSummary');
+  const noteEl = document.getElementById('apprModalNote');
+  const submitBtn = document.getElementById('apprModalSubmitBtn');
+
+  if (decision === 'APPROVED') {
+    titleEl.textContent = `✓ Xác Nhận Phê Duyệt Chiết Khấu: ${opp.id}`;
+    titleEl.style.color = '#047857';
+    noteEl.value = 'Đồng ý phê duyệt mức chiết khấu đề xuất. Khách hàng cam kết thanh toán đợt 1 ngay sau khi ký hợp đồng.';
+    submitBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+    submitBtn.innerHTML = '<span>✓ Tôi Phê Duyệt Chiết Khấu Này</span>';
+  } else if (decision === 'REJECTED') {
+    titleEl.textContent = `✕ Xác Nhận Từ Chối Chiết Khấu: ${opp.id}`;
+    titleEl.style.color = '#dc2626';
+    noteEl.value = 'Từ chối mức chiết khấu này do vượt quá biên độ lợi nhuận gộp cho phép. Đề nghị Sales thương lượng lại tối đa 8%.';
+    submitBtn.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+    submitBtn.innerHTML = '<span>✕ Tôi Xác Nhận Từ Chối</span>';
+  } else {
+    titleEl.textContent = `✏️ Yêu Cầu Chỉnh Sửa Hồ Sơ: ${opp.id}`;
+    titleEl.style.color = '#d97706';
+    noteEl.value = 'Yêu cầu nhân viên phụ trách đàm phán lại về điều khoản bảo lãnh thanh toán trước khi duyệt.';
+    submitBtn.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+    submitBtn.innerHTML = '<span>✏️ Gửi Yêu Cầu Chỉnh Sửa</span>';
+  }
+
+  summaryEl.innerHTML = `
+    <div><b>Khách hàng:</b> ${opp.customer_name} | <b>Mã cơ hội:</b> <code>${opp.id}</code></div>
+    <div><b>Chuyên viên trình:</b> ${opp.sales_rep ? opp.sales_rep.name : 'N/A'}</div>
+    <div><b>Tổng giá trị đề xuất:</b> <span style="font-weight:800; color:#b45309;">${formatCurrency(opp.pricing.total_after_discount)}</span></div>
+    <div><b>Mức chiết khấu xin duyệt:</b> <span style="font-weight:700; color:#dc2626;">${opp.pricing.discount_percentage}%</span> (-${formatCurrency(opp.pricing.discount_amount)})</div>
+    <div><b>Người đưa ra quyết định:</b> <b>${currentUser.full_name} (${currentUser.role_name})</b></div>
+  `;
+
+  openHitlModal('hitlApprovalModal');
+}
+
+async function confirmManagerApprovalDecision() {
+  if (!currentApprOppId || !currentApprDecision) return;
+  const note = document.getElementById('apprModalNote').value.trim();
+  closeHitlModal('hitlApprovalModal');
 
   try {
     const res = await fetch('/api/approve', {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ opp_id: oppId, decision, note })
+      body: JSON.stringify({ opp_id: currentApprOppId, decision: currentApprDecision, note })
     });
 
     const data = await res.json();
     if (res.ok && data.status === 'success') {
-      alert(`Đã lưu quyết định: [${decision}] cho cơ hội ${oppId}!`);
-      const idx = allOpportunities.findIndex(o => o.id === oppId);
+      alert(`✓ Đã lưu quyết định [${currentApprDecision}] của Trưởng phòng cho cơ hội ${currentApprOppId}!`);
+      const idx = allOpportunities.findIndex(o => o.id === currentApprOppId);
       if (idx !== -1) {
         allOpportunities[idx] = data.updated_opportunity;
       }

@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/style.css?v=multi_page_yellow">
+  <link rel="stylesheet" href="/style.css?v=hitl_checkpoints">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -627,9 +627,10 @@
                   </button>
                 </div>
 
-                <div style="margin-top:20px; padding:14px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:12px; text-align:center;">
+                <div style="margin-top:20px; padding:14px; background:#faf5ff; border:1px dashed #c084fc; border-radius:12px; text-align:center;">
                   <div style="font-size:24px;">📁</div>
-                  <div style="font-size:12.5px; font-weight:700; color:#334155; margin-top:4px;">Kéo thả file yêu cầu hoặc</div>
+                  <div style="font-size:12.5px; font-weight:700; color:#581c87; margin-top:4px;">Nạp file yêu cầu mua sắm</div>
+                  <div style="font-size:11px; color:#7e22ce; margin-top:2px;">(Tự động xử lý & chuyển thẳng sang Phê duyệt)</div>
                   <input type="file" id="fileUploadInput" onchange="handleFileUploadSim(event)" style="margin-top:8px; font-size:11px;">
                 </div>
               </div>
@@ -640,10 +641,18 @@
                 </div>
                 <textarea id="pageIngestTextarea" class="form-input" style="height:220px; font-size:13.5px; line-height:1.6;" placeholder="Dán nội dung email hoặc yêu cầu khách hàng vào đây..."></textarea>
                 
-                <div style="margin-top:16px; display:flex; justify-content:flex-end;">
-                  <button class="btn-primary-action" onclick="runIngestToParsing()">
-                    <span>⚡ PHÂN TÍCH BẰNG AI AGENT &rarr;</span>
-                  </button>
+                <div style="margin-top:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                  <div style="font-size:12.5px; color:#6b21a8; font-weight:600;">
+                    ⚡ Đưa file ➔ AI tự đọc, đối chiếu kho & chuyển thẳng Phê duyệt
+                  </div>
+                  <div style="display:flex; gap:10px;">
+                    <button class="btn-primary-action" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);" onclick="runIngestAutoToApproval()">
+                      <span>🚀 Tự Động Xử Lý ➔ Chuyển Thẳng Phê Duyệt &rarr;</span>
+                    </button>
+                    <button class="btn-secondary-tool" onclick="runIngestToParsing()">
+                      <span>⚡ Phân Tích & Duyệt Từng Bước &rarr;</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -653,6 +662,49 @@
                PAGE 5: PHÂN TÍCH YÊU CẦU AI (2-COLUMN SPLIT VIEW)
                ------------------------------------------------------------- -->
           <div id="page-parsing" class="saas-page">
+            <!-- Stepper Quy Trình Có Sự Giám Sát Của Con Người -->
+            <div class="human-checkpoint-stepper">
+              <div class="step-item done" onclick="openSaasPage('page-ingestion')">
+                <div class="step-circle">✓</div>
+                <div class="step-text">
+                  <div class="step-title">1. Tiếp Nhận</div>
+                  <div class="step-sub">Nạp văn bản/file</div>
+                </div>
+              </div>
+              <div class="step-connector done"></div>
+              <div class="step-item active">
+                <div class="step-circle">2</div>
+                <div class="step-text">
+                  <div class="step-title">2. Bóc Tách Thực Thể</div>
+                  <div class="step-sub">Checkpoint 1: Xác nhận bóc tách</div>
+                </div>
+              </div>
+              <div class="step-connector"></div>
+              <div class="step-item">
+                <div class="step-circle">3</div>
+                <div class="step-text">
+                  <div class="step-title">3. Thẩm Định Kho</div>
+                  <div class="step-sub">Checkpoint 1.2: Đối chiếu tồn</div>
+                </div>
+              </div>
+              <div class="step-connector"></div>
+              <div class="step-item">
+                <div class="step-circle">4</div>
+                <div class="step-text">
+                  <div class="step-title">4. Tính Giá & Chiết Khấu</div>
+                  <div class="step-sub">Kiểm soát hạn mức duyệt</div>
+                </div>
+              </div>
+              <div class="step-connector"></div>
+              <div class="step-item">
+                <div class="step-circle">5</div>
+                <div class="step-text">
+                  <div class="step-title">5. Phê Duyệt Cấp Trên</div>
+                  <div class="step-sub">Checkpoint 2: Quản lý chốt</div>
+                </div>
+              </div>
+            </div>
+
             <div class="page-top-bar">
               <div>
                 <h1 class="page-main-title">Phân Tích Yêu Cầu AI (Skill 1: Request Analyzer)</h1>
@@ -660,7 +712,7 @@
               </div>
               <div style="display:flex; gap:10px;">
                 <button class="btn-secondary-tool" onclick="openSaasPage('page-validation')">Thẩm định tồn kho &rarr;</button>
-                <button class="btn-primary-action" onclick="openSaasPage('page-opportunities')">Tạo hồ sơ cơ hội</button>
+                <button class="btn-primary-action" onclick="openSaasPage('page-opportunities')">Xem danh sách cơ hội</button>
               </div>
             </div>
 
@@ -669,7 +721,7 @@
                 <div class="saas-card-title-row">
                   <div class="saas-card-title">📄 Nội Dung Yêu Cầu Gốc</div>
                 </div>
-                <div id="parsingRawContent" style="background:#f8fafc; padding:16px; border-radius:12px; font-size:13px; line-height:1.6; white-space:pre-wrap; border:1px solid #e2e8f0; height:340px; overflow-y:auto;">
+                <div id="parsingRawContent" style="background:#f8fafc; padding:16px; border-radius:12px; font-size:13px; line-height:1.6; white-space:pre-wrap; border:1px solid #e2e8f0; height:320px; overflow-y:auto;">
                   <!-- Raw text injected -->
                 </div>
               </div>
@@ -679,9 +731,33 @@
                   <div class="saas-card-title">🤖 Kết Quả Bóc Tách Thực Thể (Structured JSON)</div>
                   <span class="badge-tag eligible" id="parsingStatusPill">Chuẩn hóa 100%</span>
                 </div>
-                <div id="parsingResultBox" style="background:#fffdf0; padding:16px; border-radius:12px; font-size:12.5px; line-height:1.7; border:1px solid #fde68a; height:340px; overflow-y:auto;">
+                <div id="parsingResultBox" style="background:#fffdf0; padding:16px; border-radius:12px; font-size:12.5px; line-height:1.7; border:1px solid #fde68a; height:320px; overflow-y:auto;">
                   <!-- Structured fields -->
                 </div>
+              </div>
+            </div>
+
+            <!-- HUMAN CHECKPOINT 1: XÁC NHẬN CỦA NGƯỜI DÙNG -->
+            <div class="saas-card" id="parsingHumanCheckpointCard" style="border-left: 4px solid #f59e0b; background: #fffdf5; margin-top:20px;">
+              <div class="saas-card-title-row">
+                <div class="saas-card-title" style="color:#b45309;">
+                  <span>🛡️ HUMAN CHECKPOINT 1: XÁC NHẬN KẾT QUẢ BÓC TÁCH CỦA AI</span>
+                </div>
+                <span class="badge-tag pending" id="parsingVerificationBadge">Chờ Người Dùng Xác Nhận</span>
+              </div>
+              <div id="parsingCheckpointGuidance" style="font-size:13px; color:#475569; margin-bottom:16px; line-height:1.6;">
+                <!-- Dynamically filled by JS -->
+              </div>
+              <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
+                <button class="btn-primary-action" id="btnConfirmParsingAction" onclick="confirmParsingCheckpoint()">
+                  <span>✓ Xác Nhận Tính Chính Xác & Chuyển Sang Thẩm Định Kho &rarr;</span>
+                </button>
+                <button class="btn-secondary-tool" id="btnRequestMoreInfoAction" style="color:#d97706; border-color:#fde68a;" onclick="openRequestMoreInfoModal()">
+                  <span>⚠️ Yêu Cầu Khách Hàng Bổ Sung</span>
+                </button>
+                <button class="btn-secondary-tool" onclick="openEditParsingModal()">
+                  <span>✏️ Chỉnh Sửa Thủ Công</span>
+                </button>
               </div>
             </div>
           </div>
@@ -745,19 +821,93 @@
                PAGE 7: THẨM ĐỊNH SẢN PHẨM VÀ TỒN KHO
                ------------------------------------------------------------- -->
           <div id="page-validation" class="saas-page">
+            <!-- Stepper Quy Trình Có Sự Giám Sát Của Con Người -->
+            <div class="human-checkpoint-stepper">
+              <div class="step-item done" onclick="openSaasPage('page-ingestion')">
+                <div class="step-circle">✓</div>
+                <div class="step-text">
+                  <div class="step-title">1. Tiếp Nhận</div>
+                  <div class="step-sub">Nạp văn bản/file</div>
+                </div>
+              </div>
+              <div class="step-connector done"></div>
+              <div class="step-item done" onclick="openSaasPage('page-parsing')">
+                <div class="step-circle">✓</div>
+                <div class="step-text">
+                  <div class="step-title">2. Bóc Tách Thực Thể</div>
+                  <div class="step-sub">Đã xác nhận bóc tách</div>
+                </div>
+              </div>
+              <div class="step-connector done"></div>
+              <div class="step-item active">
+                <div class="step-circle">3</div>
+                <div class="step-text">
+                  <div class="step-title">3. Thẩm Định Kho</div>
+                  <div class="step-sub">Checkpoint 1.2: Đối chiếu tồn</div>
+                </div>
+              </div>
+              <div class="step-connector"></div>
+              <div class="step-item">
+                <div class="step-circle">4</div>
+                <div class="step-text">
+                  <div class="step-title">4. Tính Giá & Chiết Khấu</div>
+                  <div class="step-sub">Kiểm soát hạn mức duyệt</div>
+                </div>
+              </div>
+              <div class="step-connector"></div>
+              <div class="step-item">
+                <div class="step-circle">5</div>
+                <div class="step-text">
+                  <div class="step-title">5. Phê Duyệt Cấp Trên</div>
+                  <div class="step-sub">Checkpoint 2: Quản lý chốt</div>
+                </div>
+              </div>
+            </div>
+
             <div class="page-top-bar">
               <div>
                 <h1 class="page-main-title">Thẩm Định Danh Mục Sản Phẩm & Tồn Kho (Skill 2)</h1>
                 <p class="page-main-sub">Đối chiếu dữ liệu thời gian thực với Master Catalog Minh An Company</p>
               </div>
-              <button class="btn-primary-action" onclick="runLiveInventoryValidation()">
-                <span>🔍 Chạy thẩm định AI</span>
-              </button>
+              <div style="display:flex; gap:10px;">
+                <button class="btn-secondary-tool" onclick="runLiveInventoryValidation()">
+                  <span>🔍 Chạy thẩm định AI</span>
+                </button>
+                <button class="btn-primary-action" onclick="openSaasPage('page-pricing')">
+                  <span>Chuyển sang Báo giá &rarr;</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- HUMAN CHECKPOINT 1.2: THẨM ĐỊNH TỒN KHO CỦA CƠ HỘI ĐANG XỬ LÝ -->
+            <div class="saas-card" id="activeOppValidationBox" style="border-left: 4px solid #059669; background: #f0fdf4;">
+              <div class="saas-card-title-row">
+                <div class="saas-card-title" style="color:#047857;">
+                  <span>🛡️ HUMAN CHECKPOINT 1.2: THẨM ĐỊNH TỒN KHO CỦA CƠ HỘI <code id="valOppId">OPP-CURRENT</code></span>
+                </div>
+                <span class="badge-tag eligible" id="valStockMatchBadge">Đủ Hàng Đáp Ứng</span>
+              </div>
+              <div id="valOppItemsTableWrap">
+                <!-- Dynamically injected table for current opportunity items vs stock -->
+              </div>
+              <div style="margin-top:16px; display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #bbf7d0; padding-top:14px; flex-wrap:wrap; gap:12px;">
+                <div style="font-size:12.5px; color:#065f46;">
+                  ℹ️ Đã đối chiếu với kho thực tế. Vui lòng kiểm tra và <b>Xác nhận chấp thuận giữ kho</b> cho khách hàng.
+                </div>
+                <div style="display:flex; gap:10px;">
+                  <button class="btn-primary-action" style="background:#059669;" onclick="confirmInventoryAndProceed()">
+                    <span>✓ Xác Nhận Đủ Kho & Tiếp Tục Lập Báo Giá &rarr;</span>
+                  </button>
+                  <button class="btn-secondary-tool" style="color:#dc2626; border-color:#fca5a5;" onclick="markInventoryUnfulfilled()">
+                    <span>✕ Đánh Dấu Chưa Đáp Ứng (Hết Hàng)</span>
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div class="saas-card">
               <div class="saas-card-title-row">
-                <div class="saas-card-title">📦 Master Catalog & Năng Lực Đáp Ứng Thực Tế</div>
+                <div class="saas-card-title">📦 Master Catalog & Năng Lực Đáp Ứng Toàn Doanh Nghiệp</div>
               </div>
               <table class="saas-table">
                 <thead>
@@ -783,30 +933,121 @@
                PAGE 8: BÁO GIÁ VÀ CHIẾT KHẤU
                ------------------------------------------------------------- -->
           <div id="page-pricing" class="saas-page">
+            <!-- Stepper Quy Trình Có Sự Giám Sát Của Con Người -->
+            <div class="human-checkpoint-stepper">
+              <div class="step-item done" onclick="openSaasPage('page-ingestion')">
+                <div class="step-circle">✓</div>
+                <div class="step-text">
+                  <div class="step-title">1. Tiếp Nhận</div>
+                  <div class="step-sub">Nạp văn bản/file</div>
+                </div>
+              </div>
+              <div class="step-connector done"></div>
+              <div class="step-item done" onclick="openSaasPage('page-parsing')">
+                <div class="step-circle">✓</div>
+                <div class="step-text">
+                  <div class="step-title">2. Bóc Tách Thực Thể</div>
+                  <div class="step-sub">Đã xác nhận bóc tách</div>
+                </div>
+              </div>
+              <div class="step-connector done"></div>
+              <div class="step-item done" onclick="openSaasPage('page-validation')">
+                <div class="step-circle">✓</div>
+                <div class="step-text">
+                  <div class="step-title">3. Thẩm Định Kho</div>
+                  <div class="step-sub">Đã đối chiếu kho</div>
+                </div>
+              </div>
+              <div class="step-connector done"></div>
+              <div class="step-item active">
+                <div class="step-circle">4</div>
+                <div class="step-text">
+                  <div class="step-title">4. Tính Giá & Chiết Khấu</div>
+                  <div class="step-sub">Checkpoint 1.3: Kiểm soát hạn mức</div>
+                </div>
+              </div>
+              <div class="step-connector"></div>
+              <div class="step-item">
+                <div class="step-circle">5</div>
+                <div class="step-text">
+                  <div class="step-title">5. Phê Duyệt Cấp Trên</div>
+                  <div class="step-sub">Checkpoint 2: Quản lý chốt</div>
+                </div>
+              </div>
+            </div>
+
             <div class="page-top-bar">
               <div>
                 <h1 class="page-main-title">Báo Giá & Ma Trận Phê Duyệt Chiết Khấu (Skill 3)</h1>
                 <p class="page-main-sub">Tính toán có kiểm soát số liệu, không để LLM tự ước lượng</p>
               </div>
-              <button class="btn-primary-action" onclick="alert('Đã tính toán và kiểm tra lại toàn bộ công thức!')">
-                <span>🧮 Tính toán bằng AI Agent</span>
-              </button>
+              <div style="display:flex; gap:10px;">
+                <button class="btn-secondary-tool" onclick="openSaasPage('page-validation')">&larr; Xem lại tồn kho</button>
+                <button class="btn-primary-action" onclick="openSaasPage('page-approval')">Xem Hộp Thư Phê Duyệt &rarr;</button>
+              </div>
+            </div>
+
+            <!-- HUMAN CHECKPOINT 1.3: BẢNG TÍNH BÁO GIÁ & PHÂN QUYỀN CHIẾT KHẤU -->
+            <div class="saas-card" id="activeOppPricingBox" style="border-left: 4px solid #7c3aed; background: #faf5ff;">
+              <div class="saas-card-title-row">
+                <div class="saas-card-title" style="color:#6d28d9;">
+                  <span>🛡️ HUMAN CHECKPOINT 1.3: THIẾT LẬP BÁO GIÁ & PHÂN QUYỀN CHIẾT KHẤU CHO <code id="pricingOppId">OPP-CURRENT</code></span>
+                </div>
+                <span class="badge-tag" id="pricingGovernanceBadge">Trong Hạn Mức</span>
+              </div>
+
+              <!-- Interactive 3-box pricing -->
+              <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:16px; margin-bottom:16px;">
+                <div style="background:#fff; padding:16px; border-radius:12px; border:1px solid #e2e8f0;">
+                  <div style="font-size:11.5px; color:#64748b; font-weight:700;">TỔNG TIỀN NIÊM YẾT (GỐC)</div>
+                  <div id="pricingOriginalTotal" style="font-size:22px; font-weight:800; color:#1e293b; margin-top:4px;">0 đ</div>
+                  <small style="color:#64748b; font-size:11px;" id="pricingItemCountNote">0 sản phẩm</small>
+                </div>
+                <div style="background:#fff; padding:16px; border-radius:12px; border:1px solid #e2e8f0;">
+                  <div style="font-size:11.5px; color:#64748b; font-weight:700;">MỨC CHIẾT KHẤU ĐỀ XUẤT (%)</div>
+                  <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+                    <input type="number" id="pricingDiscountInput" min="0" max="30" step="0.5" value="5" class="form-input" style="width:90px; padding:6px 10px; font-size:16px; font-weight:700;" oninput="updateLivePricingCalculation()">
+                    <span style="font-weight:700; font-size:16px;">%</span>
+                    <div style="display:flex; gap:4px; margin-left:auto;">
+                      <button class="btn-secondary-tool" style="padding:4px 8px; font-size:11px;" onclick="setDiscountQuick(5)">5%</button>
+                      <button class="btn-secondary-tool" style="padding:4px 8px; font-size:11px;" onclick="setDiscountQuick(8)">8%</button>
+                      <button class="btn-secondary-tool" style="padding:4px 8px; font-size:11px;" onclick="setDiscountQuick(12)">12%</button>
+                    </div>
+                  </div>
+                  <small id="pricingDiscountValText" style="color:#dc2626; font-size:11.5px; font-weight:600; display:block; margin-top:4px;">Giảm: 0 đ</small>
+                </div>
+                <div style="background:#fff; padding:16px; border-radius:12px; border:1px solid #e2e8f0;">
+                  <div style="font-size:11.5px; color:#64748b; font-weight:700;">THÀNH TIỀN SAU CHIẾT KHẤU</div>
+                  <div id="pricingFinalTotal" style="font-size:22px; font-weight:800; color:#b45309; margin-top:4px;">0 đ</div>
+                  <small style="color:#059669; font-size:11px; font-weight:600;">(Đã bao gồm VAT & CSBH tiêu chuẩn)</small>
+                </div>
+              </div>
+
+              <div id="pricingGovernanceNotice" style="padding:14px 18px; border-radius:12px; margin-bottom:16px; font-size:13px; line-height:1.6;">
+                <!-- Dynamic notice according to role and discount -->
+              </div>
+
+              <div style="display:flex; justify-content:flex-end; gap:12px; border-top:1px dashed #e9d5ff; padding-top:14px;">
+                <button class="btn-primary-action" id="btnConfirmPricingAction" onclick="submitPricingConfirmation()">
+                  <span>✓ Xác Nhận & Phát Hành Báo Giá</span>
+                </button>
+              </div>
             </div>
 
             <div class="saas-card">
               <div class="saas-card-title-row">
-                <div class="saas-card-title">⚖️ Ma Trận Thẩm Quyền Phê Duyệt Chiết Khấu</div>
+                <div class="saas-card-title">⚖️ Ma Trận Thẩm Quyền Phê Duyệt Chiết Khấu Toàn Doanh Nghiệp</div>
               </div>
               <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:16px;">
                 <div style="padding:16px; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:12px;">
                   <div style="font-size:12px; color:#065f46; font-weight:700;">HẠN MỨC CHUYÊN VIÊN SALES</div>
-                  <div style="font-size:22px; font-weight:800; color:#047857; margin-top:4px;">Chiết khấu &le; 5.0%</div>
+                  <div style="font-size:22px; font-weight:800; color:#047857; margin-top:4px;">Chiết khấu &le; 5.0% (hoặc &le; 8.0%)</div>
                   <div style="font-size:12px; color:#065f46; margin-top:6px;">Chuyên viên bán hàng được toàn quyền áp dụng và phát hành báo giá.</div>
                 </div>
 
                 <div style="padding:16px; background:#f5f3ff; border:1px solid #ddd6fe; border-radius:12px;">
                   <div style="font-size:12px; color:#5b21b6; font-weight:700;">HẠN MỨC TRƯỞNG PHÒNG KD</div>
-                  <div style="font-size:22px; font-weight:800; color:#6d28d9; margin-top:4px;">Chiết khấu 5.1% - 15.0%</div>
+                  <div style="font-size:22px; font-weight:800; color:#6d28d9; margin-top:4px;">Chiết khấu > 8.0% - 15.0%</div>
                   <div style="font-size:12px; color:#5b21b6; margin-top:6px;">Hoặc tổng giá trị hợp đồng &ge; 500,000,000 VNĐ bắt buộc lập Phiếu chuyển duyệt.</div>
                 </div>
 
@@ -823,6 +1064,48 @@
                PAGE 9: PHÊ DUYỆT (TRƯỞNG PHÒNG KINH DOANH)
                ------------------------------------------------------------- -->
           <div id="page-approval" class="saas-page">
+            <!-- Stepper Quy Trình Có Sự Giám Sát Của Con Người -->
+            <div class="human-checkpoint-stepper">
+              <div class="step-item done" onclick="openSaasPage('page-ingestion')">
+                <div class="step-circle">✓</div>
+                <div class="step-text">
+                  <div class="step-title">1. Tiếp Nhận</div>
+                  <div class="step-sub">Nạp văn bản/file</div>
+                </div>
+              </div>
+              <div class="step-connector done"></div>
+              <div class="step-item done" onclick="openSaasPage('page-parsing')">
+                <div class="step-circle">✓</div>
+                <div class="step-text">
+                  <div class="step-title">2. Bóc Tách Thực Thể</div>
+                  <div class="step-sub">Đã xác nhận bóc tách</div>
+                </div>
+              </div>
+              <div class="step-connector done"></div>
+              <div class="step-item done" onclick="openSaasPage('page-validation')">
+                <div class="step-circle">✓</div>
+                <div class="step-text">
+                  <div class="step-title">3. Thẩm Định Kho</div>
+                  <div class="step-sub">Đã đối chiếu kho</div>
+                </div>
+              </div>
+              <div class="step-connector done"></div>
+              <div class="step-item done" onclick="openSaasPage('page-pricing')">
+                <div class="step-circle">✓</div>
+                <div class="step-text">
+                  <div class="step-title">4. Tính Giá & Chiết Khấu</div>
+                  <div class="step-sub">Đã trình duyệt</div>
+                </div>
+              </div>
+              <div class="step-connector done"></div>
+              <div class="step-item active">
+                <div class="step-circle">5</div>
+                <div class="step-text">
+                  <div class="step-title">5. Phê Duyệt Cấp Trên</div>
+                  <div class="step-sub">Checkpoint 2: Quản lý chốt</div>
+                </div>
+              </div>
+            </div>
             <div class="page-top-bar">
               <div>
                 <h1 class="page-main-title">Hộp Thư Phê Duyệt Của Trưởng Phòng Kinh Doanh</h1>
@@ -1125,6 +1408,127 @@
     </div>
   </div>
 
-  <script src="/app.js?v=multi_page_yellow"></script>
+  <!-- =========================================================================
+       HUMAN-IN-THE-LOOP (HITL) CONFIRMATION MODALS
+       ========================================================================= -->
+  <!-- 1. Universal Confirmation Modal -->
+  <div class="hitl-modal-overlay" id="hitlConfirmModal">
+    <div class="hitl-modal-box">
+      <div class="hitl-modal-header">
+        <h3 id="hitlConfirmTitle">🛡️ Xác Nhận Của Con Người (Human Checkpoint)</h3>
+        <button class="btn-sidebar-logout" onclick="closeHitlModal('hitlConfirmModal')" style="font-size:18px;">✕</button>
+      </div>
+      <div class="hitl-modal-body" id="hitlConfirmBody">
+        <!-- Body content -->
+      </div>
+      <div class="hitl-modal-footer">
+        <button class="btn-secondary-tool" onclick="closeHitlModal('hitlConfirmModal')">Hủy bỏ</button>
+        <button class="btn-primary-action" id="hitlConfirmSubmitBtn">
+          <span>✓ Tôi Xác Nhận & Tiếp Tục</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Request More Info Modal -->
+  <div class="hitl-modal-overlay" id="hitlRequestMoreInfoModal">
+    <div class="hitl-modal-box" style="max-width:620px;">
+      <div class="hitl-modal-header">
+        <h3>⚠️ Yêu Cầu Khách Hàng Bổ Sung Thông Tin</h3>
+        <button class="btn-sidebar-logout" onclick="closeHitlModal('hitlRequestMoreInfoModal')" style="font-size:18px;">✕</button>
+      </div>
+      <div class="hitl-modal-body">
+        <div style="background:#fee2e2; color:#b91c1c; padding:10px 14px; border-radius:10px; margin-bottom:14px; font-size:12.5px; font-weight:700;" id="reqMoreMissingAlert">
+          <!-- Missing fields list -->
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email người nhận:</label>
+          <input type="email" id="reqMoreCustomerEmail" class="form-input" value="contact@customer.vn">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bản nháp email yêu cầu làm rõ (AI sinh tự động):</label>
+          <textarea id="reqMoreEmailBody" class="form-input" style="height:150px; font-size:12.5px; line-height:1.6;"></textarea>
+        </div>
+        <div style="font-size:12px; color:#64748b;">
+          * Sau khi gửi, hồ sơ cơ hội sẽ được chuyển trạng thái sang <b>Cần bổ sung thông tin</b> và lưu vào lịch sử giao dịch.
+        </div>
+      </div>
+      <div class="hitl-modal-footer">
+        <button class="btn-secondary-tool" onclick="closeHitlModal('hitlRequestMoreInfoModal')">Đóng</button>
+        <button class="btn-primary-action" onclick="submitRequestMoreInfo()">
+          <span>✉️ Gửi Yêu Cầu Bổ Sung & Cập Nhật</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Edit Parsing Modal -->
+  <div class="hitl-modal-overlay" id="hitlEditParsingModal">
+    <div class="hitl-modal-box">
+      <div class="hitl-modal-header">
+        <h3>✏️ Hiệu Chỉnh Dữ Liệu Bóc Tách Thủ Công</h3>
+        <button class="btn-sidebar-logout" onclick="closeHitlModal('hitlEditParsingModal')" style="font-size:18px;">✕</button>
+      </div>
+      <div class="hitl-modal-body">
+        <div class="form-group">
+          <label class="form-label">Tên khách hàng / Doanh nghiệp</label>
+          <input type="text" id="editCustomerName" class="form-input">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;" class="form-group">
+          <div>
+            <label class="form-label">Người liên hệ</label>
+            <input type="text" id="editContactPerson" class="form-input">
+          </div>
+          <div>
+            <label class="form-label">Email liên hệ</label>
+            <input type="email" id="editCustomerEmail" class="form-input">
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;" class="form-group">
+          <div>
+            <label class="form-label">Ngân sách dự kiến (VNĐ)</label>
+            <input type="number" id="editBudget" class="form-input" placeholder="Ví dụ: 300000000">
+          </div>
+          <div>
+            <label class="form-label">Thời hạn triển khai (ngày)</label>
+            <input type="number" id="editDeadlineDays" class="form-input" placeholder="Ví dụ: 15">
+          </div>
+        </div>
+      </div>
+      <div class="hitl-modal-footer">
+        <button class="btn-secondary-tool" onclick="closeHitlModal('hitlEditParsingModal')">Hủy</button>
+        <button class="btn-primary-action" onclick="saveEditedParsingData()">
+          <span>Lưu Dữ Liệu Đã Hiệu Chỉnh</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Manager Approval Modal -->
+  <div class="hitl-modal-overlay" id="hitlApprovalModal">
+    <div class="hitl-modal-box">
+      <div class="hitl-modal-header">
+        <h3 id="apprModalTitle">📑 Phê Duyệt Phiếu Chuyển Duyệt Chiết Khấu</h3>
+        <button class="btn-sidebar-logout" onclick="closeHitlModal('hitlApprovalModal')" style="font-size:18px;">✕</button>
+      </div>
+      <div class="hitl-modal-body">
+        <div id="apprModalOppSummary" style="background:#f8fafc; padding:14px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:14px; font-size:13px; line-height:1.6;">
+          <!-- Summary injected -->
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ý kiến chỉ đạo / Ghi chú phê duyệt:</label>
+          <textarea id="apprModalNote" class="form-input" style="height:90px;" placeholder="Ví dụ: Đồng ý duyệt chiết khấu 10% do khách hàng cam kết thanh toán đợt 1 ngay sau khi ký hợp đồng..."></textarea>
+        </div>
+      </div>
+      <div class="hitl-modal-footer">
+        <button class="btn-secondary-tool" onclick="closeHitlModal('hitlApprovalModal')">Hủy bỏ</button>
+        <button class="btn-primary-action" id="apprModalSubmitBtn" onclick="confirmManagerApprovalDecision()">
+          <span>✓ Xác Nhận Phê Duyệt</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js?v=hitl_auto_approval"></script>
 </body>
 </html>
