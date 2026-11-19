@@ -12,7 +12,7 @@ let saasChartInstance = null;
 let currentProcessingOpp = null;
 
 const TEST_CASES_SAMPLES = {
-  1: `Chào Minh An Company,
+  1: `Kính gửi Bộ phận Kinh doanh & Cung ứng B2B,
 Tôi là Trần Văn Hùng, Trưởng phòng CNTT Công ty Cổ phần Công nghệ DigiTech (Email: hung.tran@digitech.vn, SĐT: 0912345678).
 Công ty chúng tôi đang cần trang bị thiết bị cho nhân viên mới:
 - 10 chiếc Laptop Doanh Nghiệp Dell Vostro 5630
@@ -22,7 +22,7 @@ Tiến độ triển khai trong vòng 7 ngày làm việc kể từ khi ký hợ
 Đề xuất mức chiết khấu thân thiết là 4%.
 Nhờ quý công ty gửi báo giá và cam kết bảo hành giúp tôi. Xin cảm ơn!`,
 
-  2: `Gửi phòng kinh doanh Minh An,
+  2: `Gửi Phòng Kinh doanh Doanh nghiệp B2B,
 Công ty Tập đoàn Dược Phẩm An Khang cần mua sắm gấp thiết bị:
 - Máy chủ Server Dell PowerEdge R450 Rack 1U
 - Switch mạng Cisco Catalyst 24 Port Gigabit C1000-24T (chưa rõ số lượng bao nhiêu cái)
@@ -30,7 +30,7 @@ Ngân sách: Hiện chưa xác định ngân sách cụ thể, phụ thuộc và
 Thời hạn: Cần càng sớm càng tốt nhưng chưa có ngày cụ thể.
 Người liên hệ: Nguyễn Thu Trang - Phòng Mua sắm (Email: trang.nt@ankhangpharma.com).`,
 
-  3: `Kính gửi Minh An Company,
+  3: `Kính gửi Bộ phận Bán hàng B2B Doanh nghiệp,
 Công ty Cổ phần Viễn Thông Toàn Cầu (Global Telecom JSC) cần đặt mua:
 - 30 chiếc Thiết bị định tuyến Router Cisco Catalyst C8200L
 Số lượng đặt mua lớn và thanh toán ngay 100%, chúng tôi yêu cầu mức chiết khấu thương mại 10%.
@@ -39,7 +39,7 @@ Thời hạn giao hàng: trong vòng 10 ngày.
 Người phê duyệt hợp đồng: Ông Lê Minh Quân - Tổng Giám Đốc.
 Người liên hệ: Ban Mua Sắm (ban.muasam@globaltelecom.vn - SĐT: 0988776655).`,
 
-  4: `Gửi Công ty Minh An,
+  4: `Gửi Đơn vị Cung ứng Thiết bị B2B,
 Công ty Khách sạn Grand Plaza Hà Nội cần đặt mua khẩn cấp:
 - 50 chiếc Máy in Laser đa năng HP LaserJet Pro MFP M428fdw
 Yêu cầu: Giao hàng toàn bộ và lắp đặt hoàn thiện trong vòng 3 ngày tới để kịp khai trương trung tâm hội nghị.
@@ -377,7 +377,7 @@ function switchAuthMode(mode) {
     regForm.style.display = 'block';
 
     titleEl.textContent = 'Đăng Ký Tài Khoản Mới';
-    subtitleEl.textContent = 'Tạo tài khoản Khách hàng hoặc Chuyên viên B2B Minh An';
+    subtitleEl.textContent = 'Tạo tài khoản Khách hàng hoặc Chuyên viên B2B Doanh Nghiệp';
   } else {
     tabLogin.style.background = '#fff';
     tabLogin.style.color = '#b45309';
@@ -389,7 +389,7 @@ function switchAuthMode(mode) {
     regForm.style.display = 'none';
     loginForm.style.display = 'block';
 
-    titleEl.textContent = 'Minh An AI Agent Platform';
+    titleEl.textContent = 'Enterprise B2B AI Agent Platform';
     subtitleEl.textContent = 'Cổng xác thực & Đăng nhập doanh nghiệp';
   }
 }
@@ -629,7 +629,7 @@ function applyUserInfoToUi(user) {
   if (pEmail) pEmail.textContent = user.email || 'N/A';
   if (pRole) pRole.textContent = user.role_name || user.role_code;
   if (pId) pId.textContent = user.id || 'USR-999';
-  if (pComp) pComp.textContent = user.company || user.department || 'Minh An B2B';
+  if (pComp) pComp.textContent = user.company || user.department || 'Doanh Nghiệp B2B';
   if (pPhone) pPhone.textContent = user.phone || 'Chưa cập nhật';
   if (pAvatar && user.avatar) pAvatar.src = user.avatar;
 
@@ -676,7 +676,7 @@ function applyRoleBasedAccess(user) {
   } else if (user.role_code === 'CUSTOMER') {
     bannerIcon.textContent = '🏢';
     bannerTitle.textContent = `Cổng Dịch Vụ Khách Hàng: ${user.name}`;
-    bannerDesc.textContent = `Bạn có thể gửi yêu cầu báo giá mới, theo dõi tiến độ xử lý và xem các đề xuất thương mại từ Minh An.`;
+    bannerDesc.textContent = `Bạn có thể gửi yêu cầu báo giá mới, theo dõi tiến độ xử lý và xem các đề xuất thương mại từ hệ thống B2B.`;
     bannerBadge.textContent = 'Khách Hàng Doanh Nghiệp';
     bannerBadge.className = 'badge-tag eligible';
     dashHeaderTitle.textContent = 'Theo Dõi Đơn Hàng & Yêu Cầu Của DigiTech';
@@ -1275,7 +1275,7 @@ function openRequestMoreInfoModal() {
 
   const bodyInput = document.getElementById('reqMoreEmailBody');
   if (bodyInput) {
-    bodyInput.value = `Kính gửi Quý công ty ${currentProcessingOpp.customer_name},\n\nMinh An Company đã tiếp nhận yêu cầu mua sắm thiết bị từ Quý khách. Để hoàn thiện báo giá và kiểm tra tồn kho chính xác nhất, chúng tôi kính đề nghị Quý khách vui lòng bổ sung/làm rõ thêm thông tin sau:\n- ${currentProcessingOpp.missing_fields && currentProcessingOpp.missing_fields.length > 0 ? currentProcessingOpp.missing_fields.join('\n- ') : 'Số lượng và thời hạn cụ thể'}\n\nTrân trọng cảm ơn sự hợp tác của Quý khách!\nBộ phận B2B - Minh An Company`;
+    bodyInput.value = `Kính gửi Quý công ty ${currentProcessingOpp.customer_name},\n\nHệ thống B2B đã tiếp nhận yêu cầu mua sắm thiết bị từ Quý khách. Để hoàn thiện báo giá và kiểm tra tồn kho chính xác nhất, chúng tôi kính đề nghị Quý khách vui lòng bổ sung/làm rõ thêm thông tin sau:\n- ${currentProcessingOpp.missing_fields && currentProcessingOpp.missing_fields.length > 0 ? currentProcessingOpp.missing_fields.join('\n- ') : 'Số lượng và thời hạn cụ thể'}\n\nTrân trọng cảm ơn sự hợp tác của Quý khách!\nBộ phận B2B Doanh Nghiệp`;
   }
   openHitlModal('hitlRequestMoreInfoModal');
 }
@@ -1547,7 +1547,7 @@ function updateLivePricingCalculation() {
       noticeEl.style.color = '#5b21b6';
       noticeEl.innerHTML = `
         <b>⚠️ Yêu cầu chuyển duyệt cấp trên:</b> Mức chiết khấu <b>${discount}%</b> (hoặc giá trị hợp đồng &ge; 500 triệu) đã <b>vượt quá thẩm quyền tự duyệt</b> của Chuyên viên Sales (tối đa 8%).<br>
-        Theo quy chế tài chính Minh An Company, đơn hàng này bắt buộc phải lập <b>Phiếu Chuyển Duyệt</b> trình Trưởng phòng Kinh doanh xem xét.
+        Theo quy chế tài chính và quản trị rủi ro B2B của doanh nghiệp, đơn hàng này bắt buộc phải lập <b>Phiếu Chuyển Duyệt</b> trình Trưởng phòng Kinh doanh xem xét.
       `;
     }
     if (confirmBtn) {

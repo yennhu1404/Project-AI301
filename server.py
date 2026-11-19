@@ -389,7 +389,7 @@ class B2BAgentHttpHandler(http.server.SimpleHTTPRequestHandler):
             # 1. Kiểm tra tài khoản có tồn tại không
             user_record = USER_DATABASE.get(email)
             if not user_record:
-                self._send_error(401, f"Tài khoản '{email}' không tồn tại trong hệ thống Minh An Company!")
+                self._send_error(401, f"Tài khoản '{email}' không tồn tại trong hệ thống B2B!")
                 return
 
             # 2. Kiểm tra mật khẩu có khớp không
@@ -553,7 +553,7 @@ class B2BAgentHttpHandler(http.server.SimpleHTTPRequestHandler):
         import datetime
         html = f"""
         <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-        <head><title>Báo Cáo Cơ Hội Bán Hàng B2B - Minh An Company</title>
+        <head><title>Báo Cáo Cơ Hội Bán Hàng B2B Doanh Nghiệp</title>
         <style>
             body {{ font-family: 'Times New Roman', serif; margin: 30px; }}
             h1 {{ color: #b45309; text-align: center; }}
@@ -563,7 +563,7 @@ class B2BAgentHttpHandler(http.server.SimpleHTTPRequestHandler):
         </style>
         </head>
         <body>
-            <h1>CÔNG TY CÔNG NGHỆ MINH AN - BÁO CÁO CƠ HỘI BÁN HÀNG B2B</h1>
+            <h1>HỆ THỐNG B2B AI AGENT - BÁO CÁO CƠ HỘI BÁN HÀNG DOANH NGHIỆP</h1>
             <p style="text-align:center; font-style: italic;">Hệ thống AI Agent Xử lý Cơ hội Bán hàng B2B | Ngày trích xuất: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}</p>
             <hr/>
             <h2>1. Danh Sách Cơ Hội Bán Hàng Được Xử Lý</h2>
@@ -598,7 +598,7 @@ class ReusableThreadingServer(socketserver.ThreadingMixIn, socketserver.TCPServe
     allow_reuse_address = True
 
 def main():
-    print(f"🚀 Minh An B2B AI Agent Server (Bảo Mật & Phân Quyền) đang chạy tại: http://localhost:{PORT}")
+    print(f"🚀 B2B Enterprise AI Agent Server (Bảo Mật & Phân Quyền) đang chạy tại: http://localhost:{PORT}")
     with ReusableThreadingServer(("0.0.0.0", PORT), B2BAgentHttpHandler) as httpd:
         print(f"✅ Sẵn sàng phục vụ tại http://localhost:{PORT}")
         httpd.serve_forever()

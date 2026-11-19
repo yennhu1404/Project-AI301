@@ -82,7 +82,7 @@ class B2BOpportunityOrchestrator:
         valid_cust = None
         for cm in cust_matches:
             clean_cm = cm.strip()
-            if "Minh An" not in clean_cm and len(clean_cm) > 2:
+            if not re.search(r"^(Nhà cung cấp|Bên bán|Đơn vị cung ứng|Minh An)$", clean_cm, re.I) and len(clean_cm) > 2:
                 valid_cust = clean_cm
                 break
         if valid_cust:
@@ -211,7 +211,7 @@ class B2BOpportunityOrchestrator:
 
             if sku not in self.catalog:
                 is_all_catalog_valid = False
-                unmet_reasons.append(f"Sản phẩm '{p.get('name')}' không thuộc danh mục chính thức của Minh An.")
+                unmet_reasons.append(f"Sản phẩm '{p.get('name')}' không thuộc danh mục phân phối chính thức của hệ thống.")
                 items_result.append({
                     "sku": "CHƯA_XÁC_ĐỊNH",
                     "name": p.get("name"),
@@ -413,9 +413,9 @@ class B2BOpportunityOrchestrator:
             questions = "\n".join([f"  {idx+1}. Quý khách vui lòng cung cấp thêm: {item}" for idx, item in enumerate(missing_fields)])
             return f"""Kính gửi Anh/Chị {contact} - {customer},
 
-Công ty Minh An xin trân trọng cảm ơn Quý khách đã quan tâm và gửi yêu cầu hợp tác mua sắm thiết bị công nghệ.
+Bộ phận Kinh doanh B2B xin trân trọng cảm ơn Quý khách đã quan tâm và gửi yêu cầu hợp tác mua sắm thiết bị.
 
-Để bộ phận kỹ thuật và kinh doanh của Minh An lập bảng báo giá chính xác và tối ưu nhất cho Quý công ty, chúng tôi kính đề nghị Quý khách hỗ trợ làm rõ một số nội dung sau:
+Để bộ phận kỹ thuật và kinh doanh lập bảng báo giá chính xác và tối ưu nhất cho Quý công ty, chúng tôi kính đề nghị Quý khách hỗ trợ làm rõ một số nội dung sau:
 
 {questions}
 
@@ -426,14 +426,14 @@ Kính chúc Quý công ty ngày làm việc hiệu quả và thành công!
 Trân trọng,
 ---------------------------------------
 {sales_rep['name']} | {sales_rep['role']}
-Công ty Công Nghệ Minh An
+Bộ Phận Bán Hàng Doanh Nghiệp B2B
 Hotline: 1900 6868 | Email: {sales_rep['email']}"""
 
         elif status == "Có thể tiếp tục":
             items_str = "\n".join([f"  • {it['name']}: {it['requested_qty']} chiếc × {it['unit_price']:,.0f} VNĐ" for it in validation["items"]])
             return f"""Kính gửi Anh/Chị {contact} - {customer},
 
-Công ty Minh An xin chân thành cảm ơn Quý khách đã tin tưởng lựa chọn giải pháp thiết bị công nghệ của chúng tôi.
+Hệ thống B2B xin chân thành cảm ơn Quý khách đã tin tưởng lựa chọn giải pháp thiết bị của chúng tôi.
 
 Chúng tôi đã thẩm định tồn kho và xác nhận đáp ứng hoàn hảo yêu cầu đơn hàng của Quý công ty:
 {items_str}
@@ -448,12 +448,12 @@ Bảng báo giá chi tiết và cam kết bảo hành chính hãng đã được
 Trân trọng,
 ---------------------------------------
 {sales_rep['name']} | {sales_rep['role']}
-Công ty Công Nghệ Minh An | Email: {sales_rep['email']}"""
+Bộ Phận Bán Hàng Doanh Nghiệp B2B | Email: {sales_rep['email']}"""
 
         elif status == "Chờ duyệt":
             return f"""Kính gửi Anh/Chị {contact} - {customer},
 
-Công ty Minh An đã tiếp nhận đầy đủ thông tin đơn hàng và đề xuất mức chiết khấu {pricing['discount_percentage']}% của Quý công ty.
+Hệ thống B2B đã tiếp nhận đầy đủ thông tin đơn hàng và đề xuất mức chiết khấu {pricing['discount_percentage']}% của Quý công ty.
 
 Do mức chiết khấu này vượt hạn mức ủy quyền tiêu chuẩn của chuyên viên bán hàng, chúng tôi đang lập Phiếu chuyển duyệt đặc biệt trình Trưởng phòng Kinh doanh để phê duyệt mức ưu đãi cao nhất cho dự án của Quý công ty.
 
@@ -462,18 +462,18 @@ Kết quả phê duyệt sẽ được gửi tới Quý khách trước 16h30 h�
 Trân trọng,
 ---------------------------------------
 {sales_rep['name']} | {sales_rep['role']}
-Công ty Công Nghệ Minh An"""
+Bộ Phận Bán Hàng Doanh Nghiệp B2B"""
 
         else: # Chưa đáp ứng
             reasons = "\n".join([f"  • {r}" for r in validation["unmet_reasons"]])
             return f"""Kính gửi Anh/Chị {contact} - {customer},
 
-Công ty Minh An xin trân trọng cảm ơn Quý khách đã gửi yêu cầu đặt hàng thiết bị.
+Bộ phận Kinh doanh B2B xin trân trọng cảm ơn Quý khách đã gửi yêu cầu đặt hàng thiết bị.
 
 Sau khi đối chiếu năng lực cung ứng thực tế tại hệ thống kho vận, chúng tôi rất tiếc phải thông báo hiện tại đơn hàng chưa thể đáp ứng ngay vì các lý do sau:
 {reasons}
 
-Phương án đề xuất tối ưu từ Minh An:
+Phương án đề xuất tối ưu:
 1. Giao trước số lượng hàng hiện có trong kho, số còn lại sẽ giao ngay khi đợt nhập khẩu bổ sung hoàn tất.
 2. Hoặc tư vấn cấu hình sản phẩm tương đương đang sẵn sàng tại kho với hiệu năng tương tự.
 
@@ -482,7 +482,7 @@ Chuyên viên phụ trách sẽ gọi điện trực tiếp để tư vấn và 
 Trân trọng,
 ---------------------------------------
 {sales_rep['name']} | {sales_rep['role']}
-Công ty Công Nghệ Minh An"""
+Bộ Phận Bán Hàng Doanh Nghiệp B2B"""
 
     def _compose_approval_ticket(self, extracted, validation, pricing, sales_rep):
         items_str = "\n".join([f"• {it['name']}: {it['requested_qty']} chiếc (Đơn giá: {it['unit_price']:,.0f} đ, Tồn kho: {it['stock_available']})" for it in validation['items']])
@@ -641,7 +641,7 @@ Công ty Công Nghệ Minh An"""
         return stats
 
     def _init_default_opportunities(self):
-        tc1_text = """Chào Minh An Company,
+        tc1_text = """Kính gửi Bộ phận Kinh doanh & Cung ứng B2B,
 Tôi là Trần Văn Hùng, Trưởng phòng CNTT Công ty Cổ phần Công nghệ DigiTech (Email: hung.tran@digitech.vn, SĐT: 0912345678).
 Công ty chúng tôi đang cần trang bị thiết bị cho nhân viên mới:
 - 10 chiếc Laptop Doanh Nghiệp Dell Vostro 5630
@@ -651,7 +651,7 @@ Tiến độ triển khai trong vòng 7 ngày làm việc kể từ khi ký hợ
 Đề xuất mức chiết khấu thân thiết là 4%.
 Nhờ quý công ty gửi báo giá và cam kết bảo hành giúp tôi. Xin cảm ơn!"""
 
-        tc2_text = """Gửi phòng kinh doanh Minh An,
+        tc2_text = """Gửi Phòng Kinh doanh Doanh nghiệp B2B,
 Công ty Tập đoàn Dược Phẩm An Khang cần mua sắm gấp thiết bị:
 - Máy chủ Server Dell PowerEdge R450 Rack 1U
 - Switch mạng Cisco Catalyst 24 Port Gigabit C1000-24T (chưa rõ số lượng bao nhiêu cái)
@@ -659,7 +659,7 @@ Ngân sách: Hiện chưa xác định ngân sách cụ thể, phụ thuộc và
 Thời hạn: Cần càng sớm càng tốt nhưng chưa có ngày cụ thể.
 Người liên hệ: Nguyễn Thu Trang - Phòng Mua sắm (Email: trang.nt@ankhangpharma.com)."""
 
-        tc3_text = """Kính gửi Minh An Company,
+        tc3_text = """Kính gửi Bộ phận Bán hàng B2B Doanh nghiệp,
 Công ty Cổ phần Viễn Thông Toàn Cầu (Global Telecom JSC) cần đặt mua:
 - 30 chiếc Thiết bị định tuyến Router Cisco Catalyst C8200L
 Số lượng đặt mua lớn và thanh toán ngay 100%, chúng tôi yêu cầu mức chiết khấu thương mại 10%.
@@ -668,7 +668,7 @@ Thời hạn giao hàng: trong vòng 10 ngày.
 Người phê duyệt hợp đồng: Ông Lê Minh Quân - Tổng Giám Đốc.
 Người liên hệ: Ban Mua Sắm (ban.muasam@globaltelecom.vn - SĐT: 0988776655)."""
 
-        tc4_text = """Gửi Công ty Minh An,
+        tc4_text = """Gửi Đơn vị Cung ứng Thiết bị B2B,
 Công ty Khách sạn Grand Plaza Hà Nội cần đặt mua khẩn cấp:
 - 50 chiếc Máy in Laser đa năng HP LaserJet Pro MFP M428fdw
 Yêu cầu: Giao hàng toàn bộ và lắp đặt hoàn thiện trong vòng 3 ngày tới để kịp khai trương trung tâm hội nghị.
