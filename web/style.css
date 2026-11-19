@@ -1966,3 +1966,85 @@ body {
 .human-checkpoint-stepper {
   display: none !important;
 }
+
+/* ========================================================
+   GLOBAL MASTER RESET & ZERO-STATE CONTROLS
+   ======================================================== */
+.btn-reset-master {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid #b91c1c !important;
+  padding: 8px 16px !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35) !important;
+  transition: all 0.2s ease !important;
+  white-space: nowrap !important;
+}
+
+.btn-reset-master:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.5) !important;
+  transform: translateY(-1px);
+}
+
+.sidebar-reset-box {
+  margin: 14px 14px 8px 14px;
+  padding: 12px;
+  background: #fff1f2;
+  border: 1.5px dashed #f87171;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 1px 4px rgba(239, 68, 68, 0.08);
+}
+
+.btn-sidebar-reset {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff !important;
+  border: none;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn-sidebar-reset:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-flow-reset {
+  background: #fee2e2 !important;
+  border: 1px solid #fca5a5 !important;
+  color: #b91c1c !important;
+  padding: 8px 14px !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+  font-size: 12.5px !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-flow-reset:hover {
+  background: #fecaca !important;
+  border-color: #f87171 !important;
+  color: #991b1b !important;
+}
+

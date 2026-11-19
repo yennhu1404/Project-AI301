@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/style.css?v=guided_flow_v4">
+  <link rel="stylesheet" href="/style.css?v=reset_button_v6">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -452,6 +452,20 @@
           </li>
         </ul>
 
+        <!-- Quick Master Reset Banner in Sidebar -->
+        <div class="sidebar-reset-box">
+          <div style="font-size:11px; font-weight:800; color:#b91c1c; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">
+            🛠️ THỬ NGHIỆM & DEMO
+          </div>
+          <button class="btn-sidebar-reset" onclick="handleClearAllData()" title="Làm sạch toàn bộ dữ liệu về trạng thái trống ban đầu (Zero-state)">
+            <span style="font-size:14px;">🔄</span>
+            <span>Reset Về Trống (0)</span>
+          </button>
+          <div style="font-size:11px; color:#64748b; margin-top:6px; line-height:1.3;">
+            Xóa trắng toàn bộ để chạy lại từ đầu
+          </div>
+        </div>
+
         <!-- Bottom User Footer -->
         <div class="sidebar-user-footer">
           <div class="user-info-meta">
@@ -488,8 +502,9 @@
               <span class="badge-dot" id="headerNotifDot"></span>
             </button>
 
-            <button class="btn-secondary-tool" onclick="handleClearAllData()" style="color:#b91c1c; border-color:#fecaca; background:#fef2f2;" title="Làm sạch dữ liệu về trống (Zero-state)">
-              <span>🗑️ Đặt về trống (0)</span>
+            <button class="btn-reset-master" onclick="handleClearAllData()" title="Làm sạch toàn bộ dữ liệu về trạng thái trống ban đầu (Zero-state) để bắt đầu lại">
+              <span>🔄</span>
+              <span>Reset Về Trống (0)</span>
             </button>
             <button class="btn-secondary-tool" onclick="handleSeedDemoData()" title="Nạp 4 test case mẫu khi cần demo">
               <span>⚡ Nạp mẫu demo</span>
@@ -571,6 +586,9 @@
               </div>
             </div>
             <div style="display:flex; align-items:center; gap:10px;">
+              <button class="btn-flow-reset" onclick="handleClearAllData()" title="Hủy bỏ luồng này và reset dữ liệu về trống (0)">
+                <span>🔄 Reset về 0</span>
+              </button>
               <button class="btn-primary-action glow-action-btn" id="btnNextGuidedStep" onclick="executeCurrentGuidedStep()">
                 <span id="btnNextGuidedStepLabel">⚡ Bắt Đầu Xử Lý & Xác Nhận Bóc Tách ➔</span>
               </button>
@@ -709,6 +727,9 @@
                   </button>
                   <button class="demo-pill-btn" onclick="loadTestCaseToForm(4)">
                     <span><b>TC4:</b> Grand Plaza (Hết hàng, Chưa đáp ứng)</span>
+                  </button>
+                  <button class="demo-pill-btn" onclick="handleClearAllData()" style="background:#fee2e2; border-color:#fca5a5; color:#991b1b; font-weight:700;">
+                    <span>🔄 Xóa Trắng & Bắt Đầu Lại Từ Đầu</span>
                   </button>
                 </div>
 
@@ -1717,6 +1738,6 @@
     </div>
   </div>
 
-  <script src="/app.js?v=guided_flow_v4"></script>
+  <script src="/app.js?v=reset_button_v6"></script>
 </body>
 </html>

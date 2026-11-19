@@ -203,18 +203,20 @@ function openSaasPage(pageId) {
   updateGuidedFlowBar(pageId);
   updateFourStepLayout(pageId);
 
-  if (pageId === 'page-validation') {
-    if (!currentProcessingOpp && allOpportunities.length > 0) {
-      currentProcessingOpp = allOpportunities[0];
+  if (pageId === 'page-parsing') {
+    if (currentProcessingOpp) {
+      renderParsingSplitView(currentProcessingOpp);
+    } else {
+      renderEmptyParsingView();
     }
-    if (currentProcessingOpp) renderActiveOppValidation(currentProcessingOpp);
+  }
+
+  if (pageId === 'page-validation') {
+    renderActiveOppValidation(currentProcessingOpp);
   }
 
   if (pageId === 'page-pricing') {
-    if (!currentProcessingOpp && allOpportunities.length > 0) {
-      currentProcessingOpp = allOpportunities[0];
-    }
-    if (currentProcessingOpp) renderActiveOppPricing(currentProcessingOpp);
+    renderActiveOppPricing(currentProcessingOpp);
   }
 
   if (pageId === 'page-audit') {
@@ -926,8 +928,49 @@ async function runIngestToParsing() {
     alert('Lỗi kết nối máy chủ');
   }
 }
-    console.error(err);
-    alert('Lỗi kết nối máy chủ');
+
+function renderEmptyParsingView() {
+  const rawBox = document.getElementById('parsingRawContent');
+  const resBox = document.getElementById('parsingResultBox');
+  const badgeEl = document.getElementById('parsingVerificationBadge');
+  const guidanceEl = document.getElementById('parsingCheckpointGuidance');
+  const confirmBtn = document.getElementById('btnConfirmParsingAction');
+
+  if (rawBox) {
+    rawBox.innerHTML = `
+      <div style="text-align:center; padding:50px 20px; color:#94a3b8;">
+        <div style="font-size:36px; margin-bottom:8px;">📄</div>
+        <div style="font-weight:700; color:#475569; font-size:14px;">Chưa Có Nội Dung Văn Bản Gốc</div>
+        <p style="font-size:12.5px; margin-top:4px;">Vui lòng vào <b>Bước 1: Tiếp nhận</b> để dán email hoặc nạp tệp đặt hàng.</p>
+        <button class="btn-primary-action" onclick="openSaasPage('page-ingestion')" style="margin-top:12px; font-size:12px;">
+          <span>➕ Đi Đến Tiếp Nhận Yêu Cầu</span>
+        </button>
+      </div>
+    `;
+  }
+
+  if (resBox) {
+    resBox.innerHTML = `
+      <div style="text-align:center; padding:50px 20px; color:#94a3b8;">
+        <div style="font-size:36px; margin-bottom:8px;">🤖</div>
+        <div style="font-weight:700; color:#475569; font-size:14px;">Chưa Có Thực Thể Bóc Tách</div>
+        <p style="font-size:12.5px; margin-top:4px;">AI Agent sẽ tự động trích xuất cấu trúc dữ liệu ngay khi bạn nạp yêu cầu.</p>
+      </div>
+    `;
+  }
+
+  if (badgeEl) {
+    badgeEl.className = 'badge-tag missing';
+    badgeEl.textContent = 'Chưa Có Dữ Liệu';
+  }
+
+  if (guidanceEl) {
+    guidanceEl.innerHTML = 'ℹ️ Chưa có đơn hàng nào trong luồng bóc tách. Vui lòng bắt đầu từ <b>Bước 1: Tiếp nhận yêu cầu</b>.';
+  }
+
+  if (confirmBtn) {
+    confirmBtn.style.background = '#94a3b8';
+    confirmBtn.innerHTML = '<span>Chờ Nạp Yêu Cầu Từ Bước 1</span>';
   }
 }
 
@@ -1286,15 +1329,35 @@ function saveEditedParsingData() {
 
 // --- CHECKPOINT 1.2: THẨM ĐỊNH KHO ---
 function renderActiveOppValidation(opp) {
-  if (!opp) return;
   const oppIdEl = document.getElementById('valOppId');
-  if (oppIdEl) oppIdEl.textContent = opp.id;
-
   const wrap = document.getElementById('valOppItemsTableWrap');
+  const badgeEl = document.getElementById('valStockMatchBadge');
+
+  if (!opp) {
+    if (oppIdEl) oppIdEl.textContent = 'CHỜ NẠP ĐƠN';
+    if (badgeEl) {
+      badgeEl.className = 'badge-tag missing';
+      badgeEl.textContent = 'Chưa Có Dữ Liệu';
+    }
+    if (wrap) {
+      wrap.innerHTML = `
+        <div style="text-align:center; padding:36px 16px; color:#64748b; background:#f8fafc; border-radius:12px; border:1px dashed #cbd5e1;">
+          <div style="font-size:32px;">📦</div>
+          <div style="font-size:14px; font-weight:700; color:#1e293b; margin-top:8px;">Chưa Có Đơn Hàng Nào Đang Thẩm Định Tồn Kho</div>
+          <p style="font-size:12.5px; margin-top:4px;">Khi bạn nạp file ở <b>Bước 1</b>, AI sẽ tự động bóc tách và đối chiếu sản phẩm với kho tại đây.</p>
+          <button class="btn-primary-action" onclick="openSaasPage('page-ingestion')" style="margin-top:12px; font-size:12px;">
+            <span>➕ Bắt Đầu Từ Bước 1</span>
+          </button>
+        </div>
+      `;
+    }
+    return;
+  }
+
+  if (oppIdEl) oppIdEl.textContent = opp.id;
   if (!wrap) return;
 
   const isAllStockOk = opp.validation.items.every(it => it.is_stock_ok);
-  const badgeEl = document.getElementById('valStockMatchBadge');
   if (badgeEl) {
     badgeEl.className = isAllStockOk ? 'badge-tag eligible' : 'badge-tag unfulfilled';
     badgeEl.textContent = isAllStockOk ? 'Đủ Hàng Đáp Ứng 100%' : 'Thiếu Hụt Kho / Cần Nhập';
@@ -1350,17 +1413,39 @@ function markInventoryUnfulfilled() {
 
 // --- CHECKPOINT 1.3: TÍNH GIÁ & CHIẾT KHẤU ---
 function renderActiveOppPricing(opp) {
-  if (!opp) return;
   const oppIdEl = document.getElementById('pricingOppId');
+  const totalEl = document.getElementById('pricingOriginalTotal');
+  const finalTotalEl = document.getElementById('pricingFinalTotal');
+  const itemCountNote = document.getElementById('pricingItemCountNote');
+  const discountValText = document.getElementById('pricingDiscountValText');
+  const noticeEl = document.getElementById('pricingGovernanceNotice');
+  const badgeEl = document.getElementById('pricingGovernanceBadge');
+
+  if (!opp) {
+    if (oppIdEl) oppIdEl.textContent = 'CHỜ NẠP ĐƠN';
+    if (totalEl) totalEl.textContent = '0 đ';
+    if (finalTotalEl) finalTotalEl.textContent = '0 đ';
+    if (itemCountNote) itemCountNote.textContent = '0 sản phẩm';
+    if (discountValText) discountValText.textContent = 'Giảm: 0 đ';
+    if (badgeEl) {
+      badgeEl.className = 'badge-tag missing';
+      badgeEl.textContent = 'Chưa Có Dữ Liệu';
+    }
+    if (noticeEl) {
+      noticeEl.style.background = '#f8fafc';
+      noticeEl.style.border = '1px dashed #cbd5e1';
+      noticeEl.style.color = '#64748b';
+      noticeEl.innerHTML = 'ℹ️ Chưa có đơn hàng nào trong luồng tính giá. Vui lòng nạp đơn hàng từ <b>Bước 1: Tiếp nhận yêu cầu</b>.';
+    }
+    return;
+  }
+
   if (oppIdEl) oppIdEl.textContent = opp.id;
 
   const totalOriginal = opp.validation.items.reduce((sum, it) => sum + (it.unit_price * it.requested_qty), 0);
   opp.pricing.total_before_discount = totalOriginal;
 
-  const totalEl = document.getElementById('pricingOriginalTotal');
   if (totalEl) totalEl.textContent = formatCurrency(totalOriginal);
-
-  const itemCountNote = document.getElementById('pricingItemCountNote');
   if (itemCountNote) itemCountNote.textContent = `${opp.validation.items.length} mặt hàng, ${opp.validation.items.reduce((s, it) => s + it.requested_qty, 0)} sản phẩm`;
 
   const discountInput = document.getElementById('pricingDiscountInput');
@@ -1369,6 +1454,37 @@ function renderActiveOppPricing(opp) {
   }
 
   updateLivePricingCalculation();
+}
+
+// --- RESET DỮ LIỆU VỀ 0 ---
+async function resetAllSystemData() {
+  if (!confirm('Bạn có chắc chắn muốn làm sạch toàn bộ dữ liệu cơ hội bán hàng về 0 (Zero-state) để bắt đầu demo từ đầu?')) return;
+  try {
+    await fetch('/api/reset_data', { method: 'POST', headers: getAuthHeaders() });
+    currentProcessingOpp = null;
+    allOpportunities = [];
+    const textarea = document.getElementById('pageIngestTextarea');
+    if (textarea) textarea.value = '';
+
+    renderDashboardData({
+      total_count: 0,
+      eligible: { count: 0, total_value: 0 },
+      missing_info: { count: 0, total_value: 0 },
+      unfulfilled: { count: 0, total_value: 0 },
+      pending_approval: { count: 0, total_value: 0 }
+    }, []);
+
+    renderApprovalInbox([]);
+    renderAllOpportunitiesTable([]);
+    renderEmptyParsingView();
+    renderActiveOppValidation(null);
+    renderActiveOppPricing(null);
+
+    showStepTransitionToast('✓ Đã làm sạch toàn bộ dữ liệu về 0! Bạn có thể bắt đầu demo mới.', 'success', 3000);
+    openSaasPage('page-dashboard');
+  } catch (e) {
+    alert('Không thể kết nối máy chủ để reset!');
+  }
 }
 
 function setDiscountQuick(val) {
@@ -1743,7 +1859,7 @@ async function handleUploadNewData() {
 // DATA RESET & SEED CONTROLLERS (ZERO-STATE)
 // ==========================================
 async function handleClearAllData() {
-  if (!confirm('Bạn có chắc chắn muốn làm sạch toàn bộ dữ liệu cơ hội và đưa hệ thống về trạng thái TRỐNG (Zero-state)?')) {
+  if (!confirm('Bạn có chắc chắn muốn RESET TOÀN BỘ hệ thống về trạng thái TRỐNG (Zero-state) để bắt đầu lại từ đầu?')) {
     return;
   }
   try {
@@ -1752,12 +1868,31 @@ async function handleClearAllData() {
     if (res.ok) {
       allOpportunities = [];
       currentProcessingOpp = null;
+      
+      const textarea = document.getElementById('pageIngestTextarea');
+      if (textarea) textarea.value = '';
+      
+      const fileInput = document.getElementById('fileUploadInput');
+      if (fileInput) fileInput.value = '';
+      
+      const oppBadge = document.getElementById('sidebarOppCount');
+      if (oppBadge) oppBadge.textContent = '0';
+      const pendingBadge = document.getElementById('sidebarPendingCount');
+      if (pendingBadge) pendingBadge.textContent = '0';
+      const notifDot = document.getElementById('headerNotifDot');
+      if (notifDot) notifDot.style.display = 'none';
+
       renderDashboardData(data.summary, allOpportunities);
       renderAllOpportunitiesTable(allOpportunities);
       renderApprovalInbox(allOpportunities);
       renderReportsTable(data.summary, allOpportunities);
+      renderEmptyParsingView();
+      renderActiveOppValidation(null);
+      renderActiveOppPricing(null);
       loadAuditLogs();
-      alert('Đã chuyển toàn bộ hệ thống về trạng thái DỮ LIỆU TRỐNG thành công!');
+
+      showStepTransitionToast('✓ Hệ thống đã RESET VỀ TRỐNG (0 dữ liệu). Sẵn sàng bắt đầu yêu cầu mới!', 'success', 3500);
+      openSaasPage('page-ingestion');
     }
   } catch (err) {
     alert('Lỗi kết nối máy chủ!');
